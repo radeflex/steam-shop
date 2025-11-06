@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: steam-shop
+server:
+  port: 7777
