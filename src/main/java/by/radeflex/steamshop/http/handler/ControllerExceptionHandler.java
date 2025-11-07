@@ -1,6 +1,6 @@
 package by.radeflex.steamshop.http.handler;
 
-import by.radeflex.steamshop.exception.ProductExistsException;
+import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.validation.ValidationError;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,8 +15,8 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<?> handleValidationException(ValidationError ex) {
         return ResponseEntity.badRequest().body(Map.of("errors", ex.getErrors()));
     }
-    @ExceptionHandler(ProductExistsException.class)
-    public ResponseEntity<?> handleProductExistsException(ProductExistsException ex) {
+    @ExceptionHandler(ObjectExistsException.class)
+    public ResponseEntity<?> handleExistsException(ObjectExistsException ex) {
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 }

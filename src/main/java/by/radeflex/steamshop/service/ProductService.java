@@ -3,7 +3,7 @@ package by.radeflex.steamshop.service;
 import by.radeflex.steamshop.dto.ProductCreateEditDto;
 import by.radeflex.steamshop.dto.ProductReadDto;
 import by.radeflex.steamshop.entity.QProduct;
-import by.radeflex.steamshop.exception.ProductExistsException;
+import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.mapper.ProductMapper;
@@ -44,9 +44,9 @@ public class ProductService {
     @Transactional
     public ProductReadDto save(ProductCreateEditDto dto) {
         if (productRepository.exists(QProduct.product.title.eq(dto.title())))
-            throw new ProductExistsException("Товар с таким названием уже есть");
+            throw new ObjectExistsException();
         if (productRepository.exists(QProduct.product.description.eq(dto.description())))
-            throw new ProductExistsException("Товар с таким описанием уже есть");
+            throw new ObjectExistsException();
         return Optional.of(dto)
                 .map(productMapper::mapFrom)
                 .map(productRepository::save)
