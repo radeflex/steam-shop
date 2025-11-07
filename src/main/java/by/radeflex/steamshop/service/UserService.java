@@ -7,12 +7,12 @@ import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.mapper.UserMapper;
 import by.radeflex.steamshop.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -28,6 +28,12 @@ public class UserService implements UserDetailsService {
             throw new ObjectExistsException();
         if (userRepository.exists(QUser.user.email.eq(dto.email())))
             throw new ObjectExistsException();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<UserReadDto> findById(Integer id) {
+        return userRepository.findById(id)
+                .map(userMapper::mapFrom);
     }
 
     @Transactional
