@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS users(
     username VARCHAR(32) NOT NULL,
     password VARCHAR(63) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER'
+            CHECK (role IN('USER', 'ADMIN')),
     points INTEGER DEFAULT 0,
     balance INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -28,9 +30,9 @@ CREATE TABLE IF NOT EXISTS account(
     product_id INT REFERENCES product NOT NULL
 );
 
-CREATE TABLE if NOT EXISTS cart(
+CREATE TABLE IF NOT EXISTS user_product(
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users,
     product_id INT REFERENCES product,
-    count INT DEFAULT 1
+    quantity INT DEFAULT 1
 );
