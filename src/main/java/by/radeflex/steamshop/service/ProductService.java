@@ -2,7 +2,6 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.ProductCreateEditDto;
 import by.radeflex.steamshop.dto.ProductReadDto;
-import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.ProductFilter;
