@@ -29,7 +29,6 @@ public class UserMapper {
     public UserReadDto mapFrom(User user) {
         return UserReadDto.builder()
                 .username(user.getUsername())
-                .password(user.getPassword())
                 .email(user.getEmail())
                 .balance(user.getBalance())
                 .points(user.getPoints())

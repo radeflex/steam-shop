@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 @Builder
 public record UserReadDto(
         String username,
-        String password,
         String email,
         Integer balance,
         Integer points,
