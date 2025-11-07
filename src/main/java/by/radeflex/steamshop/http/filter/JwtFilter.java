@@ -1,8 +1,6 @@
 package by.radeflex.steamshop.http.filter;
 
 import by.radeflex.steamshop.configuration.JwtProperties;
-import by.radeflex.steamshop.configuration.SecurityConfig;
-import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.repository.UserRepository;
 import by.radeflex.steamshop.service.JwtService;
 import jakarta.servlet.FilterChain;
