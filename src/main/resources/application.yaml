@@ -10,3 +10,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 server:
   port: 7777
+jwt:
+  secret: secret_key
+  cookieName: cookie_name
+  expirationDays: 30
