@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +24,13 @@ public class UserService implements UserDetailsService {
     private final UserMapper userMapper;
 
     private void checkUnique(UserCreateEditDto dto) {
+        List<String> existing = new ArrayList<>();
         if (userRepository.exists(QUser.user.username.eq(dto.username())))
-            throw new ObjectExistsException();
+            existing.add("username");
         if (userRepository.exists(QUser.user.email.eq(dto.email())))
-            throw new ObjectExistsException();
+            existing.add("email");
+        if (!existing.isEmpty())
+            throw new ObjectExistsException(existing);
     }
 
     @Transactional(readOnly = true)

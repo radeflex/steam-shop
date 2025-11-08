@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,6 +24,16 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+
+    private void checkUnique(ProductCreateEditDto dto) {
+        List<String> existing = new ArrayList<>();
+        if (productRepository.exists(QProduct.product.title.eq(dto.title())))
+            existing.add("title");
+        if (productRepository.exists(QProduct.product.description.eq(dto.description())))
+            existing.add("description");
+        if (!existing.isEmpty())
+            throw new ObjectExistsException(existing);
+    }
 
     public Page<ProductReadDto> findAll(ProductFilter filter, Pageable pageable) {
         var predicate = PredicateBuilder.builder()
@@ -43,10 +55,7 @@ public class ProductService {
 
     @Transactional
     public ProductReadDto save(ProductCreateEditDto dto) {
-        if (productRepository.exists(QProduct.product.title.eq(dto.title())))
-            throw new ObjectExistsException();
-        if (productRepository.exists(QProduct.product.description.eq(dto.description())))
-            throw new ObjectExistsException();
+        checkUnique(dto);
         return Optional.of(dto)
                 .map(productMapper::mapFrom)
                 .map(productRepository::save)
@@ -56,6 +65,7 @@ public class ProductService {
 
     @Transactional
     public Optional<ProductReadDto> update(Integer id, ProductCreateEditDto dto) {
+        checkUnique(dto);
         return productRepository.findById(id)
                 .map(p -> productMapper.mapFrom(p, dto))
                 .map(productMapper::mapFrom);

@@ -4,8 +4,6 @@ import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.dto.ProductCreateEditDto;
 import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.service.ProductService;
-import by.radeflex.steamshop.validation.ValidationError;
-import by.radeflex.steamshop.validation.ValidationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -18,18 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.util.Map;
 
+import static by.radeflex.steamshop.validation.ValidationUtils.checkErrors;
+
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
-
-    private void checkErrors(BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            var errors = ValidationUtils.mapFieldErrors(bindingResult.getFieldErrors());
-            throw new ValidationError(errors);
-        }
-    }
 
     @GetMapping
     public ResponseEntity<?> findAll(ProductFilter filter, Pageable pageable) {

@@ -9,7 +9,7 @@ import lombok.With;
 @Builder
 @With
 public record UserCreateEditDto(
-        @NotNull(message="укажите имя ползователя")
+        @NotNull(message="укажите имя пользователя")
         @Size(min=3, max=32, message="должно быть от 3 до 32 символов")
         String username,
         @NotNull(message="укажите пароль")

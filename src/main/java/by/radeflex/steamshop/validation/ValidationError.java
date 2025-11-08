@@ -12,4 +12,5 @@ public class ValidationError extends RuntimeException {
         super("Validation error");
         this.errors = errors;
     }
+
 }

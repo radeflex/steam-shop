@@ -17,6 +17,6 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(ObjectExistsException.class)
     public ResponseEntity<?> handleExistsException(ObjectExistsException ex) {
-        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        return ResponseEntity.badRequest().body(Map.of("errors", ex.getErrors()));
     }
 }
