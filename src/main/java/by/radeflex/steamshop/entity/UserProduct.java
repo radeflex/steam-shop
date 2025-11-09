@@ -19,5 +19,6 @@ public class UserProduct {
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
+    @Column(insertable = false)
     private Integer quantity;
 }
