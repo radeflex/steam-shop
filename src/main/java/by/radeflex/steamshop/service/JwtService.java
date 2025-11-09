@@ -38,10 +38,10 @@ public class JwtService {
     }
 
     public String generateToken(User user) {
-        var hours = jwtProperties.getExpirationDays();
+        var days = jwtProperties.getExpirationDays();
         return Jwts.builder()
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + hours * 24 * 3600 * 1000))
+                .expiration(new Date(System.currentTimeMillis() + days * 24 * 3600 * 1000L))
                 .claim("id", user.getId())
                 .claim("role", user.getRole())
                 .signWith(genSecretKey())

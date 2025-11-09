@@ -13,4 +13,4 @@ server:
 jwt:
   secret: secret_key
   cookieName: cookie_name
-  expirationDays: 30
+  expiration-days: 30
