@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.Map;
 
 @RestController
@@ -24,25 +25,25 @@ public class CartController {
         return ResponseEntity.ok(PageResponse.of(page));
     }
 
-    @PostMapping("/{id}")
-    public ResponseEntity<?> addToCart(@PathVariable Integer id) {
-        if (!cartService.add(id))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(Map.of("message", "Product added"));
+    @PostMapping("/{productId}")
+    public ResponseEntity<?> addToCart(@PathVariable Integer productId) {
+        var product = cartService.add(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var uri = URI.create("/cart/" + product.id());
+        return ResponseEntity.created(uri).body(product);
     }
 
     @PutMapping("/{productId}/quantity/{quantity}")
     public ResponseEntity<?> updateQuantity(@PathVariable Integer productId,
                                             @PathVariable @Min(1) Integer quantity) {
-        if (!cartService.updateQuantity(productId, quantity))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(Map.of("message", "Product quantity updated"));
+        return ResponseEntity.ok(cartService.updateQuantity(productId, quantity)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> removeFromCart(@PathVariable Integer id) {
         if (!cartService.delete(id))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(Map.of("message", "Product removed"));
+        return ResponseEntity.ok(Map.of("message", "Product removed from cart"));
     }
 }

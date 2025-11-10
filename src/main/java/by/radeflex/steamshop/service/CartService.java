@@ -1,7 +1,6 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.CartProductReadDto;
-import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.entity.UserProduct;
 import by.radeflex.steamshop.mapper.CartMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
@@ -9,9 +8,10 @@ import by.radeflex.steamshop.repository.UserProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static by.radeflex.steamshop.service.AuthService.getCurrentUser;
 
@@ -29,14 +29,14 @@ public class CartService {
     }
 
     @Transactional
-    public boolean add(Integer productId) {
+    public Optional<CartProductReadDto> add(Integer productId) {
         return productRepository.findById(productId)
                 .map(product -> {
                     var user = getCurrentUser();
-                    var userProduct = new UserProduct(null, user, product, null);
+                    var userProduct = new UserProduct(null, user, product, 1);
                     userProductRepository.save(userProduct);
-                    return true;
-                }).orElse(false);
+                    return userProduct;
+                }).map(cartMapper::mapFrom);
     }
 
     @Transactional
@@ -48,14 +48,13 @@ public class CartService {
                 }).orElse(false);
     }
 
-
     @Transactional
-    public boolean updateQuantity(Integer userProductId, Integer quantity) {
+    public Optional<CartProductReadDto> updateQuantity(Integer userProductId, Integer quantity) {
         return userProductRepository.findById(userProductId)
                 .map(up -> {
                     up.setQuantity(quantity);
                     userProductRepository.saveAndFlush(up);
-                    return true;
-                }).orElse(false);
+                    return up;
+                }).map(cartMapper::mapFrom);
     }
 }
