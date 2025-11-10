@@ -13,16 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static by.radeflex.steamshop.service.AuthService.getCurrentUser;
+
 @Service
 @RequiredArgsConstructor
 public class CartService {
     private final ProductRepository productRepository;
     private final UserProductRepository userProductRepository;
     private final CartMapper cartMapper;
-
-    private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
 
     @Transactional(readOnly = true)
     public Page<CartProductReadDto> findAll(Pageable pageable) {

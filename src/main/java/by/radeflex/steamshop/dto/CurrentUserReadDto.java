@@ -5,9 +5,12 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record UserReadDto(
+public record CurrentUserReadDto(
         Integer id,
         String username,
+        String email,
+        Integer balance,
+        Integer points,
         LocalDateTime createdAt
 ) {
 }
