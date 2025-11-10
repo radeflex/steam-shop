@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.configuration.JwtProperties;
-import by.radeflex.steamshop.dto.LoginUserDto;
+import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateEditDto;
 import by.radeflex.steamshop.service.AuthService;
 import jakarta.servlet.http.Cookie;
@@ -41,8 +41,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(HttpServletResponse resp,
-                                   @RequestBody LoginUserDto loginUserDto) {
-        var jwtResponse = authService.login(loginUserDto);
+                                   @RequestBody LoginDto loginDto) {
+        var jwtResponse = authService.login(loginDto);
         addCookie(jwtResponse.token(), resp);
         return ResponseEntity.ok(jwtResponse);
     }

@@ -1,6 +1,6 @@
 package by.radeflex.steamshop.dto;
 
-public record LoginUserDto(
+public record LoginDto(
         String username,
         String password
 ) {

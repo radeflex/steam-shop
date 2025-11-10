@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.JwtResponse;
-import by.radeflex.steamshop.dto.LoginUserDto;
+import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateEditDto;
 import by.radeflex.steamshop.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +27,11 @@ public class AuthService {
         return new JwtResponse(token);
     }
 
-    public JwtResponse login(LoginUserDto loginUserDto) {
+    public JwtResponse login(LoginDto loginDto) {
         var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginUserDto.username(),
-                        loginUserDto.password()));
+                        loginDto.username(),
+                        loginDto.password()));
         var token = jwtService.generateToken((User) auth.getPrincipal());
         return new JwtResponse(token);
     }
