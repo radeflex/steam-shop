@@ -1,13 +1,9 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.CartProductReadDto;
-import by.radeflex.steamshop.dto.ProductReadDto;
-import by.radeflex.steamshop.entity.Product;
-import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.entity.UserProduct;
 import by.radeflex.steamshop.mapper.CartMapper;
-import by.radeflex.steamshop.mapper.ProductMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
 import lombok.RequiredArgsConstructor;
