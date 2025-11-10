@@ -1,7 +1,10 @@
 package by.radeflex.steamshop.http.controller;
 
+import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.service.CartService;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +18,12 @@ import java.util.Map;
 public class CartController {
     private final CartService cartService;
 
+    @GetMapping
+    public ResponseEntity<?> findAll(Pageable pageable) {
+        var page = cartService.findAll(pageable);
+        return ResponseEntity.ok(PageResponse.of(page));
+    }
+
     @PostMapping("/{id}")
     public ResponseEntity<?> addToCart(@PathVariable Integer id) {
         if (!cartService.add(id))
@@ -22,9 +31,9 @@ public class CartController {
         return ResponseEntity.ok(Map.of("message", "Product added"));
     }
 
-    @PutMapping("/{productId}/{quantity}")
+    @PutMapping("/{productId}/quantity/{quantity}")
     public ResponseEntity<?> updateQuantity(@PathVariable Integer productId,
-                                            @PathVariable Integer quantity) {
+                                            @PathVariable @Min(1) Integer quantity) {
         if (!cartService.updateQuantity(productId, quantity))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(Map.of("message", "Product quantity updated"));

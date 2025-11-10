@@ -1,10 +1,18 @@
 package by.radeflex.steamshop.service;
 
+import by.radeflex.steamshop.dto.CartProductReadDto;
+import by.radeflex.steamshop.dto.ProductReadDto;
+import by.radeflex.steamshop.entity.Product;
+import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.entity.UserProduct;
+import by.radeflex.steamshop.mapper.CartMapper;
+import by.radeflex.steamshop.mapper.ProductMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class CartService {
     private final ProductRepository productRepository;
     private final UserProductRepository userProductRepository;
+    private final CartMapper cartMapper;
 
     private User getCurrentUser() {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CartProductReadDto> findAll(Pageable pageable) {
+        return userProductRepository.findAllByUser(getCurrentUser(), pageable)
+                .map(cartMapper::mapFrom);
     }
 
     @Transactional
