@@ -6,11 +6,11 @@ import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.UserMapper;
+import by.radeflex.steamshop.repository.UserProductHistoryRepository;
 import by.radeflex.steamshop.repository.UserRepository;
-import jakarta.persistence.Transient;
-import jakarta.transaction.TransactionScoped;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -29,6 +29,7 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final ProductHistoryMapper productHistoryMapper;
+    private final UserProductHistoryRepository userProductHistoryRepository;
 
     private void checkUnique(UserCreateEditDto dto) {
         List<String> existing = new ArrayList<>();
@@ -77,12 +78,10 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductHistoryReadDto> getProductHistoryCurrent() {
+    public Page<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
         var user = getCurrentUser();
-        Hibernate.initialize(user.getHistory());
-        return user.getHistory().stream()
-                .map(productHistoryMapper::mapFrom)
-                .toList();
+        return userProductHistoryRepository.findByUser(user, pageable)
+                .map(productHistoryMapper::mapFrom);
     }
 
     @Override
