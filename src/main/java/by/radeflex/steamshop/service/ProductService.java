@@ -54,7 +54,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductReadDto save(ProductCreateEditDto dto) {
+    public ProductReadDto create(ProductCreateEditDto dto) {
         checkUnique(dto);
         return Optional.of(dto)
                 .map(productMapper::mapFrom)

@@ -18,7 +18,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public static User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        }
+        return null;
     }
 
     public JwtResponse register(UserCreateEditDto userCreateEditDto) {

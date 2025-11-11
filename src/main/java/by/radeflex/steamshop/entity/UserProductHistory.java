@@ -6,13 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class UserProduct {
+public class UserProductHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -22,4 +23,8 @@ public class UserProduct {
     private Product product;
     @Column(insertable = false)
     private Integer quantity;
+    private String title;
+    private Integer price;
+    @Column(insertable = false)
+    private LocalDateTime createdAt;
 }

@@ -34,7 +34,7 @@ public class ProductController {
     public ResponseEntity<?> create(@RequestBody @Valid ProductCreateEditDto productCreateEditDto,
                                     BindingResult bindingResult) {
         checkErrors(bindingResult);
-        var product = productService.save(productCreateEditDto);
+        var product = productService.create(productCreateEditDto);
         var uri = URI.create("/products/" + product.id());
         return ResponseEntity.created(uri).body(product);
     }

@@ -30,9 +30,9 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(config ->
                         config
-                                .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
-                                .requestMatchers("/login", "/register", "/logout").permitAll()
-                                .requestMatchers("/products/*").hasAnyAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/products", "/products/*", "/users/current/**").permitAll()
+                                .requestMatchers("/login", "/register", "/logout", "/swagger-ui/**","/v3/api-docs/**").permitAll()
+//                                .requestMatchers("/products/*").hasAnyAuthority("ADMIN")
                                 .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider(userService))
                 .logout(config -> config.deleteCookies(jwtProperties.getCookieName()))

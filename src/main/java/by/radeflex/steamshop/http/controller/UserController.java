@@ -32,4 +32,9 @@ public class UserController {
         return ResponseEntity.ok(userService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
+
+    @GetMapping("/current/product-history")
+    public ResponseEntity<?> getCurrentUserProductHistory() {
+        return ResponseEntity.ok(userService.getProductHistoryCurrent());
+    }
 }

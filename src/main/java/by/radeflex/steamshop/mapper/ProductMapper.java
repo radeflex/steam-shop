@@ -13,6 +13,7 @@ public class ProductMapper {
         product.setPrice(dto.price());
         product.setPreviewUrl(dto.previewUrl());
     }
+
     public Product mapFrom(Product old, ProductCreateEditDto dto) {
         buildProduct(old, dto);
         return old;

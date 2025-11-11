@@ -1,14 +1,16 @@
 package by.radeflex.steamshop.service;
 
-import by.radeflex.steamshop.dto.CurrentUserReadDto;
-import by.radeflex.steamshop.dto.UserCreateEditDto;
-import by.radeflex.steamshop.dto.UserReadDto;
+import by.radeflex.steamshop.dto.*;
 import by.radeflex.steamshop.entity.QUser;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.exception.ObjectExistsException;
+import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.UserMapper;
 import by.radeflex.steamshop.repository.UserRepository;
+import jakarta.persistence.Transient;
+import jakarta.transaction.TransactionScoped;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +28,7 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final ProductHistoryMapper productHistoryMapper;
 
     private void checkUnique(UserCreateEditDto dto) {
         List<String> existing = new ArrayList<>();
@@ -71,6 +74,15 @@ public class UserService implements UserDetailsService {
                 .map(u -> userMapper.mapFrom(u, userCreateEditDto.withPassword(passwordHash)))
                 .map(userRepository::saveAndFlush)
                 .map(userMapper::mapCurrentFrom);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductHistoryReadDto> getProductHistoryCurrent() {
+        var user = getCurrentUser();
+        Hibernate.initialize(user.getHistory());
+        return user.getHistory().stream()
+                .map(productHistoryMapper::mapFrom)
+                .toList();
     }
 
     @Override
