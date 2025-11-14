@@ -4,8 +4,6 @@ import by.radeflex.steamshop.dto.OrderDto;
 import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.dto.ProductCreateEditDto;
 import by.radeflex.steamshop.filter.ProductFilter;
-import by.radeflex.steamshop.repository.ProductRepository;
-import by.radeflex.steamshop.repository.UserProductHistoryRepository;
 import by.radeflex.steamshop.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +25,6 @@ import static by.radeflex.steamshop.validation.ValidationUtils.checkErrors;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
-    private final UserProductHistoryRepository userProductHistoryRepository;
-    private final ProductRepository productRepository;
 
     @GetMapping
     public ResponseEntity<?> findAll(ProductFilter filter, Pageable pageable) {
