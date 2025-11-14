@@ -19,6 +19,12 @@ public class Account {
     private String password;
     private String email;
     private String emailPassword;
+    private boolean available;
     @ManyToOne
     private Product product;
+
+    public Account toggleAvailable() {
+        this.available = !this.available;
+        return this;
+    }
 }

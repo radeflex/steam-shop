@@ -21,7 +21,6 @@ public class UserProductHistory {
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
-    @Column(insertable = false)
     private Integer quantity;
     private String title;
     private Integer price;

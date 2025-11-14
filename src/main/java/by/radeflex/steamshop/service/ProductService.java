@@ -1,13 +1,19 @@
 package by.radeflex.steamshop.service;
 
+import by.radeflex.steamshop.dto.AccountReadDto;
 import by.radeflex.steamshop.dto.ProductCreateEditDto;
 import by.radeflex.steamshop.dto.ProductReadDto;
 import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.ProductFilter;
+import by.radeflex.steamshop.dto.OrderDto;
+import by.radeflex.steamshop.mapper.AccountMapper;
+import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.ProductMapper;
+import by.radeflex.steamshop.repository.AccountRepository;
 import by.radeflex.steamshop.repository.ProductRepository;
+import by.radeflex.steamshop.repository.UserProductHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,6 +31,10 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final UserProductHistoryRepository userProductHistoryRepository;
+    private final ProductHistoryMapper productHistoryMapper;
+    private final AccountRepository accountRepository;
+    private final AccountMapper accountMapper;
 
     private void checkUnique(ProductCreateEditDto dto) {
         List<String> existing = new ArrayList<>();
@@ -78,5 +89,24 @@ public class ProductService {
                     productRepository.delete(p);
                     return true;
                 }).orElse(false);
+    }
+
+    @Transactional
+    public List<AccountReadDto> purchase(List<OrderDto> orderDtos) {
+        return orderDtos.stream()
+                .map(o -> Map.entry(productRepository.findById(o.productId()), o.quantity()))
+                .filter(e -> e.getKey().isPresent())
+                .map(e -> accountRepository.findAccounts(e.getKey().get().getId(), e.getValue()))
+                .filter(l -> !l.isEmpty())
+                .peek(l -> {
+                    var p = l.get(0).getProduct();
+                    l.forEach(a -> accountRepository.save(a.toggleAvailable()));
+                    userProductHistoryRepository.save(
+                            productHistoryMapper.mapFrom(p, l.size())
+                    );
+                })
+                .flatMap(List::stream)
+                .map(accountMapper::mapFrom)
+                .toList();
     }
 }
