@@ -11,6 +11,7 @@ public record CurrentUserReadDto(
         String email,
         Integer balance,
         Integer points,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String role
 ) {
 }
