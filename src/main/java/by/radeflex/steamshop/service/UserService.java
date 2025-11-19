@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -30,6 +31,7 @@ public class UserService implements UserDetailsService {
     private final UserMapper userMapper;
     private final ProductHistoryMapper productHistoryMapper;
     private final UserProductHistoryRepository userProductHistoryRepository;
+    private final ImageService imageService;
 
     private void checkUnique(UserCreateEditDto dto) {
         List<String> existing = new ArrayList<>();
@@ -64,17 +66,30 @@ public class UserService implements UserDetailsService {
         var passwordHash = passwordEncoder.encode(userCreateEditDto.password());
         return Optional.of(userCreateEditDto.withPassword(passwordHash))
                 .map(userMapper::mapFrom)
-                .map(userRepository::save).orElseThrow();
+                .map(userRepository::save)
+                .orElseThrow();
     }
 
     @Transactional
-    public Optional<CurrentUserReadDto> update(UserCreateEditDto userCreateEditDto) {
+    public Optional<CurrentUserReadDto> update(UserCreateEditDto userCreateEditDto,
+                                               MultipartFile image) {
         checkUnique(userCreateEditDto);
         var passwordHash = passwordEncoder.encode(userCreateEditDto.password());
         return userRepository.findById(getCurrentUser().getId())
+                .map(u -> uploadImage(image, u))
                 .map(u -> userMapper.mapFrom(u, userCreateEditDto.withPassword(passwordHash)))
                 .map(userRepository::saveAndFlush)
                 .map(userMapper::mapCurrentFrom);
+    }
+
+    private User uploadImage(MultipartFile file, User u) {
+        if (file != null) {
+            if (!u.getAvatarUrl().isBlank())
+                imageService.delete(u.getAvatarUrl());
+            var url = imageService.upload(file);
+            u.setAvatarUrl(url);
+        }
+        return u;
     }
 
     @Transactional(readOnly = true)

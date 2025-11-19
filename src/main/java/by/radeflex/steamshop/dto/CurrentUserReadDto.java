@@ -12,6 +12,7 @@ public record CurrentUserReadDto(
         Integer balance,
         Integer points,
         LocalDateTime createdAt,
-        String role
+        String role,
+        String avatarUrl
 ) {
 }

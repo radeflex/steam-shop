@@ -34,6 +34,7 @@ public class User implements UserDetails {
     private Integer balance;
     @Column(insertable = false)
     private LocalDateTime createdAt;
+    private String avatarUrl;
 
     @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)

@@ -32,6 +32,7 @@ public class UserMapper {
                 .id(user.getId())
                 .username(user.getUsername())
                 .createdAt(user.getCreatedAt())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 
@@ -44,6 +45,7 @@ public class UserMapper {
                 .points(user.getPoints())
                 .createdAt(user.getCreatedAt())
                 .role(user.getRole().name())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 }

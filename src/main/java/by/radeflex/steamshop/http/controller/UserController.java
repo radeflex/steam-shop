@@ -7,9 +7,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import static by.radeflex.steamshop.validation.ValidationUtils.checkErrors;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,10 +22,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserController {
     private final UserService userService;
 
-    @PutMapping("/current")
+    @PutMapping(value = "/current", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> update(
-            @RequestBody @Valid UserCreateEditDto userCreateEditDto) {
-        return ResponseEntity.ok(userService.update(userCreateEditDto)
+            @RequestPart("data") @Valid UserCreateEditDto userCreateEditDto,
+            BindingResult bindingResult,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        checkErrors(bindingResult);
+        return ResponseEntity.ok(userService.update(userCreateEditDto, image)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 

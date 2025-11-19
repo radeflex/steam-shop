@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record UserReadDto(
         Integer id,
         String username,
+        String avatarUrl,
         LocalDateTime createdAt
 ) {
 }

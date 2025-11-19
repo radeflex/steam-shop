@@ -9,10 +9,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -33,12 +35,13 @@ public class ProductController {
         return ResponseEntity.ok(PageResponse.of(page));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> create(@RequestBody @Valid ProductCreateEditDto productCreateEditDto,
-                                    BindingResult bindingResult) {
+    public ResponseEntity<?> create(@RequestPart("data") @Valid ProductCreateEditDto productCreateEditDto,
+                                    BindingResult bindingResult,
+                                    @RequestPart("image") MultipartFile image) {
         checkErrors(bindingResult);
-        var product = productService.create(productCreateEditDto);
+        var product = productService.create(productCreateEditDto, image);
         var uri = URI.create("/products/" + product.id());
         return ResponseEntity.created(uri).body(product);
     }
@@ -49,13 +52,14 @@ public class ProductController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> update(@PathVariable Integer id,
-                                    @RequestBody @Valid ProductCreateEditDto dto,
-                                    BindingResult bindingResult) {
+                                    @RequestPart("data") @Valid ProductCreateEditDto dto,
+                                    BindingResult bindingResult,
+                                    @RequestPart(value = "image", required = false) MultipartFile image) {
         checkErrors(bindingResult);
-        return ResponseEntity.ok(productService.update(id, dto)
+        return ResponseEntity.ok(productService.update(id, dto, image)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 

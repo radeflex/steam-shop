@@ -11,7 +11,6 @@ public class ProductMapper {
         product.setTitle(dto.title());
         product.setDescription(dto.description());
         product.setPrice(dto.price());
-        product.setPreviewUrl(dto.previewUrl());
     }
 
     public Product mapFrom(Product old, ProductCreateEditDto dto) {

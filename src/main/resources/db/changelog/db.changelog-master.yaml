@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-added-user-product-history.sql
   - include:
       file: db/changelog/changes/003-added-available-to-account.sql
+  - include:
+      file: db/changelog/changes/004-added-avatar.sql

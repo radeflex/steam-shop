@@ -1,13 +1,11 @@
 package by.radeflex.steamshop.service;
 
-import by.radeflex.steamshop.dto.AccountReadDto;
-import by.radeflex.steamshop.dto.ProductCreateEditDto;
-import by.radeflex.steamshop.dto.ProductReadDto;
+import by.radeflex.steamshop.dto.*;
+import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.ProductFilter;
-import by.radeflex.steamshop.dto.OrderDto;
 import by.radeflex.steamshop.mapper.AccountMapper;
 import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.ProductMapper;
@@ -19,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +34,7 @@ public class ProductService {
     private final ProductHistoryMapper productHistoryMapper;
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
+    private final ImageService imageService;
 
     private void checkUnique(ProductCreateEditDto dto) {
         List<String> existing = new ArrayList<>();
@@ -64,20 +64,33 @@ public class ProductService {
         return productRepository.findById(id).map(productMapper::mapFrom);
     }
 
+    private Product uploadImage(MultipartFile file, Product p) {
+        if (file != null) {
+            if (!p.getPreviewUrl().isBlank())
+                imageService.delete(p.getPreviewUrl());
+            var url = imageService.upload(file);
+            p.setPreviewUrl(url);
+        }
+        return p;
+    }
+
     @Transactional
-    public ProductReadDto create(ProductCreateEditDto dto) {
+    public ProductReadDto create(ProductCreateEditDto dto, MultipartFile file) {
         checkUnique(dto);
         return Optional.of(dto)
                 .map(productMapper::mapFrom)
                 .map(productRepository::save)
+                .map(p -> uploadImage(file, p))
                 .map(productMapper::mapFrom)
                 .orElseThrow();
     }
 
     @Transactional
-    public Optional<ProductReadDto> update(Integer id, ProductCreateEditDto dto) {
+    public Optional<ProductReadDto> update(Integer id, ProductCreateEditDto dto,
+                                           MultipartFile file) {
         checkUnique(dto);
         return productRepository.findById(id)
+                .map(p -> uploadImage(file, p))
                 .map(p -> productMapper.mapFrom(p, dto))
                 .map(productMapper::mapFrom);
     }
@@ -86,6 +99,7 @@ public class ProductService {
     public boolean delete(Integer id) {
         return productRepository.findById(id)
                 .map(p -> {
+                    imageService.delete(p.getPreviewUrl());
                     productRepository.delete(p);
                     return true;
                 }).orElse(false);
