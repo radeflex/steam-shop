@@ -43,6 +43,12 @@ public class UserController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
+    @DeleteMapping("/current/avatar")
+    public ResponseEntity<?> deleteCurrentUserAvatar() {
+        userService.resetAvatar();
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/current/product-history")
     public ResponseEntity<?> getCurrentUserProductHistory(Pageable pageable) {
         var page = userService.getProductHistoryCurrent(pageable);
