@@ -40,10 +40,15 @@ public class UserService implements UserDetailsService {
                 FluentQuery.FetchableFluentQuery::firstValue);
         var byEmail = userRepository.findBy(QUser.user.email.eq(dto.email()),
                 FluentQuery.FetchableFluentQuery::firstValue);
-        if (byUsername != null && !byUsername.equals(user))
-            existing.add("username");
-        if (byEmail != null && !byEmail.equals(user))
-            existing.add("email");
+        if (byUsername != null) {
+            if (user == null || user != null && !byUsername.equals(user)) {
+                existing.add("username");
+            }
+        }
+        if (byEmail != null)
+            if (user == null || user != null && !byEmail.equals(user)) {
+                existing.add("email");
+            }
         if (!existing.isEmpty())
             throw new ObjectExistsException(existing);
     }
@@ -82,9 +87,19 @@ public class UserService implements UserDetailsService {
                 .map(userMapper::mapCurrentFrom);
     }
 
+    @Transactional
+    public void resetAvatar() {
+        var user = getCurrentUser();
+        if (user.getAvatarUrl() != null) {
+            imageService.delete(user.getAvatarUrl());
+            user.setAvatarUrl(null);
+            userRepository.save(user);
+        }
+    }
+
     private User uploadImage(MultipartFile file, User u) {
         if (file != null) {
-            if (!u.getAvatarUrl().isBlank())
+            if (u.getAvatarUrl() != null)
                 imageService.delete(u.getAvatarUrl());
             var url = imageService.upload(file);
             u.setAvatarUrl(url);
