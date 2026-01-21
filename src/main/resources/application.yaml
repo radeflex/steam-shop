@@ -10,6 +10,11 @@ spring:
     driver-class-name: org.postgresql.Driver
 server:
   port: 7777
+s3:
+  endpoint: endpoint
+  region: region
+  access-key: akey
+  secret-key: skey
 jwt:
   secret: secret_key
   cookieName: cookie_name
