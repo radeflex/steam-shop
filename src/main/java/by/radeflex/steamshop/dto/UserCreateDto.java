@@ -8,7 +8,7 @@ import lombok.With;
 
 @Builder
 @With
-public record UserCreateEditDto(
+public record UserCreateDto(
         @NotNull(message="укажите имя пользователя")
         @Size(min=3, max=32, message="должно быть от 3 до 32 символов")
         String username,
@@ -18,5 +18,5 @@ public record UserCreateEditDto(
         @NotNull(message="укажите email")
         @Email(message="некорректный email")
         String email
-) {
+) implements UserInfo {
 }

@@ -2,7 +2,8 @@ package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.dto.OrderDto;
 import by.radeflex.steamshop.dto.PageResponse;
-import by.radeflex.steamshop.dto.ProductCreateEditDto;
+import by.radeflex.steamshop.dto.ProductCreateDto;
+import by.radeflex.steamshop.dto.ProductUpdateDto;
 import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.service.ProductService;
 import jakarta.validation.Valid;
@@ -37,9 +38,9 @@ public class ProductController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<?> create(@RequestPart("data") @Valid ProductCreateEditDto productCreateEditDto,
+    public ResponseEntity<?> create(@RequestPart("data") @Valid ProductCreateDto productCreateEditDto,
                                     BindingResult bindingResult,
-                                    @RequestPart("image") MultipartFile image) {
+                                    @RequestPart(value = "image", required = false) MultipartFile image) {
         checkErrors(bindingResult);
         var product = productService.create(productCreateEditDto, image);
         var uri = URI.create("/products/" + product.id());
@@ -55,7 +56,7 @@ public class ProductController {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> update(@PathVariable Integer id,
-                                    @RequestPart("data") @Valid ProductCreateEditDto dto,
+                                    @RequestPart(value = "data", required = false) @Valid ProductUpdateDto dto,
                                     BindingResult bindingResult,
                                     @RequestPart(value = "image", required = false) MultipartFile image) {
         checkErrors(bindingResult);

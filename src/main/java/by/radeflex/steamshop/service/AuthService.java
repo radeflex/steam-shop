@@ -2,7 +2,7 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.JwtResponse;
 import by.radeflex.steamshop.dto.LoginDto;
-import by.radeflex.steamshop.dto.UserCreateEditDto;
+import by.radeflex.steamshop.dto.UserCreateDto;
 import by.radeflex.steamshop.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,8 +24,8 @@ public class AuthService {
         return null;
     }
 
-    public JwtResponse register(UserCreateEditDto userCreateEditDto) {
-        var user = userService.create(userCreateEditDto);
+    public JwtResponse register(UserCreateDto userCreateDto) {
+        var user = userService.create(userCreateDto);
         var token = jwtService.generateToken(user);
         return new JwtResponse(token);
     }

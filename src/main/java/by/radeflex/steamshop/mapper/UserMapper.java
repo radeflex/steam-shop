@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.mapper;
 
 import by.radeflex.steamshop.dto.CurrentUserReadDto;
-import by.radeflex.steamshop.dto.UserCreateEditDto;
+import by.radeflex.steamshop.dto.UserInfo;
 import by.radeflex.steamshop.dto.UserReadDto;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.entity.UserRole;
@@ -9,21 +9,22 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-    private void buildUser(User user, UserCreateEditDto dto) {
-        user.setUsername(dto.username());
-        user.setPassword(dto.password());
-        user.setEmail(dto.email());
-        user.setRole(UserRole.USER);
+    private void buildUser(User user, UserInfo dto) {
+        if (dto.username() != null) user.setUsername(dto.username());
+        if (dto.password() != null) user.setPassword(dto.password());
+        if (dto.email() != null) user.setEmail(dto.email());
     }
 
-    public User mapFrom(UserCreateEditDto userCreateEditDto) {
+    public User mapFrom(UserInfo dto) {
         User user = new User();
-        buildUser(user, userCreateEditDto);
+        buildUser(user, dto);
+        user.setRole(UserRole.USER);
+        user.setAvatarUrl("no-avatar");
         return user;
     }
 
-    public User mapFrom(User user, UserCreateEditDto userCreateEditDto) {
-        buildUser(user, userCreateEditDto);
+    public User mapFrom(User user, UserInfo dto) {
+        buildUser(user, dto);
         return user;
     }
 

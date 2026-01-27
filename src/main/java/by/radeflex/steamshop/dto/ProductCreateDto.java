@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record ProductCreateEditDto(
+public record ProductCreateDto(
         @NotBlank(message="не может быть пустым")
-        @Size(min=10, max=32, message="от 10 до 32 символов")
+        @Size(min=3, max=32, message="от 3 до 32 символов")
         String title,
         @NotBlank(message="не может быть пустым")
         @Size(max=500, message="не более 500 символов")
@@ -15,4 +15,4 @@ public record ProductCreateEditDto(
         @NotNull
         @Min(value=1, message="минимум 1₽")
         Integer price
-) { }
+) implements ProductInfo { }
