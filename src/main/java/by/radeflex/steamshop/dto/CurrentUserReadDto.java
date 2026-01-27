@@ -13,6 +13,7 @@ public record CurrentUserReadDto(
         Integer points,
         LocalDateTime createdAt,
         String role,
-        String avatarUrl
+        String avatarUrl,
+        Boolean confirmed
 ) {
 }

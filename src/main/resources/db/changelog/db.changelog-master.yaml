@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-added-avatar.sql
   - include:
       file: db/changelog/changes/005-added-notification.sql
+  - include:
+      file: db/changelog/changes/006-added-email-confirmation.sql

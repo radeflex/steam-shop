@@ -84,7 +84,10 @@ public class UserService implements UserDetailsService {
         var passwordHash = userUpdateDto.password() == null ?
                 null : passwordEncoder.encode(userUpdateDto.password());
         return userRepository.findById(getCurrentUser().getId())
-                .map(u -> uploadImage(image, u))
+                .map(u -> {
+                    if (!userUpdateDto.email().isBlank()) u.setConfirmed(false);
+                    return u;
+                }).map(u -> uploadImage(image, u))
                 .map(u -> userMapper.mapFrom(u, userUpdateDto.withPassword(passwordHash)))
                 .map(userRepository::saveAndFlush)
                 .map(userMapper::mapCurrentFrom);

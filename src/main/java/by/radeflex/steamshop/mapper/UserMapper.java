@@ -47,6 +47,7 @@ public class UserMapper {
                 .createdAt(user.getCreatedAt())
                 .role(user.getRole().name())
                 .avatarUrl(user.getAvatarUrl())
+                .confirmed(user.getConfirmed())
                 .build();
     }
 }

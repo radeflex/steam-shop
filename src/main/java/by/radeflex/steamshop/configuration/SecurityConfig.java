@@ -38,7 +38,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(config ->
                         config
                                 .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
-                                .requestMatchers("/login", "/register", "/logout", "/swagger-ui/**","/v3/api-docs/**").permitAll()
+                                .requestMatchers("/login", "/register",
+                                        "/logout", "/swagger-ui/**",
+                                        "/v3/api-docs/**", "confirm-email").permitAll()
                                 .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider(userService))
                 .logout(config -> config

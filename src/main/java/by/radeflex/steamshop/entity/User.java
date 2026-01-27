@@ -35,6 +35,8 @@ public class User implements UserDetails {
     @Column(insertable = false)
     private LocalDateTime createdAt;
     private String avatarUrl;
+    @Column(insertable = false)
+    private Boolean confirmed;
 
     @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)

@@ -3,6 +3,20 @@ spring:
     active: local
   application:
     name: steam-shop
+  mail:
+    host: host
+    port: 777
+    username: email
+    password: pwd
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    expiration-days: 12
   datasource:
     url: db_url
     username: db_username

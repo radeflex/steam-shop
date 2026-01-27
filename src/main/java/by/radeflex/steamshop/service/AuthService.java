@@ -16,6 +16,7 @@ public class AuthService {
     private final UserService userService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final MailService mailService;
 
     public static User getCurrentUser() {
         var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -27,6 +28,7 @@ public class AuthService {
     public JwtResponse register(UserCreateDto userCreateDto) {
         var user = userService.create(userCreateDto);
         var token = jwtService.generateToken(user);
+        mailService.sendRegistration(user);
         return new JwtResponse(token);
     }
 
