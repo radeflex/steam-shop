@@ -33,10 +33,10 @@ public class CartController {
         return ResponseEntity.created(uri).body(product);
     }
 
-    @PutMapping("/{productId}/quantity/{quantity}")
-    public ResponseEntity<?> updateQuantity(@PathVariable Integer productId,
+    @PutMapping("/{id}/quantity/{quantity}")
+    public ResponseEntity<?> updateQuantity(@PathVariable Integer id,
                                             @PathVariable @Min(1) Integer quantity) {
-        return ResponseEntity.ok(cartService.updateQuantity(productId, quantity)
+        return ResponseEntity.ok(cartService.updateQuantity(id, quantity)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 

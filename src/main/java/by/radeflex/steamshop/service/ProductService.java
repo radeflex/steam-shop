@@ -36,11 +36,13 @@ public class ProductService {
     private final AccountMapper accountMapper;
     private final ImageService imageService;
 
-    private void checkUnique(ProductCreateEditDto dto) {
+    private void checkUnique(ProductInfo dto) {
         List<String> existing = new ArrayList<>();
-        if (productRepository.exists(QProduct.product.title.eq(dto.title())))
+        if (dto.title() != null
+                && productRepository.exists(QProduct.product.title.eq(dto.title())))
             existing.add("title");
-        if (productRepository.exists(QProduct.product.description.eq(dto.description())))
+        if (dto.description() != null
+                && productRepository.exists(QProduct.product.description.eq(dto.description())))
             existing.add("description");
         if (!existing.isEmpty())
             throw new ObjectExistsException(existing);
@@ -66,7 +68,7 @@ public class ProductService {
 
     private Product uploadImage(MultipartFile file, Product p) {
         if (file != null) {
-            if (!p.getPreviewUrl().isBlank())
+            if (p.getPreviewUrl() != null && !p.getPreviewUrl().isBlank())
                 imageService.delete(p.getPreviewUrl());
             var url = imageService.upload(file);
             p.setPreviewUrl(url);
@@ -75,7 +77,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductReadDto create(ProductCreateEditDto dto, MultipartFile file) {
+    public ProductReadDto create(ProductCreateDto dto, MultipartFile file) {
         checkUnique(dto);
         return Optional.of(dto)
                 .map(productMapper::mapFrom)
@@ -86,7 +88,7 @@ public class ProductService {
     }
 
     @Transactional
-    public Optional<ProductReadDto> update(Integer id, ProductCreateEditDto dto,
+    public Optional<ProductReadDto> update(Integer id, ProductUpdateDto dto,
                                            MultipartFile file) {
         checkUnique(dto);
         return productRepository.findById(id)
