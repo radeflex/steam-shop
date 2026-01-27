@@ -2,4 +2,4 @@
 
 --changeset radeflex:4
 ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(200);
+    ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(200) NOT NULL DEFAULT 'no-avatar';

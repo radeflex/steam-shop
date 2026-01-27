@@ -35,16 +35,23 @@ public class ImageService {
 
     public Optional<byte[]> get(String key) {
         try {
+            if (key.equals("no-avatar")) {
+                var img = ClassLoader.getSystemResourceAsStream("files/no-avatar.png")
+                        .readAllBytes();
+                return Optional.of(img);
+            }
             return Optional.of(s3Client.getObject(GetObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
                     .build()).readAllBytes());
         } catch (Exception e) {
+            e.printStackTrace();
             return Optional.empty();
         }
     }
 
     public void delete(String key) {
+        if (key.equals("no-avatar")) return;
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
