@@ -4,6 +4,8 @@ import by.radeflex.steamshop.dto.*;
 import by.radeflex.steamshop.entity.QUser;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.exception.ObjectExistsException;
+import by.radeflex.steamshop.filter.PredicateBuilder;
+import by.radeflex.steamshop.filter.UserFilter;
 import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.UserMapper;
 import by.radeflex.steamshop.repository.UserProductHistoryRepository;
@@ -33,12 +35,12 @@ public class UserService implements UserDetailsService {
     private final UserProductHistoryRepository userProductHistoryRepository;
     private final ImageService imageService;
 
-    private void checkUnique(UserCreateEditDto dto) {
+    private void checkUnique(UserInfo dto) {
         List<String> existing = new ArrayList<>();
         var user = getCurrentUser();
-        var byUsername = userRepository.findBy(QUser.user.username.eq(dto.username()),
+        var byUsername = dto.username() == null ? null : userRepository.findBy(QUser.user.username.eq(dto.username()),
                 FluentQuery.FetchableFluentQuery::firstValue);
-        var byEmail = userRepository.findBy(QUser.user.email.eq(dto.email()),
+        var byEmail = dto.email() == null ? null : userRepository.findBy(QUser.user.email.eq(dto.email()),
                 FluentQuery.FetchableFluentQuery::firstValue);
         if (byUsername != null) {
             if (user == null || user != null && !byUsername.equals(user)) {
@@ -66,23 +68,24 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User create(UserCreateEditDto userCreateEditDto) {
-        checkUnique(userCreateEditDto);
-        var passwordHash = passwordEncoder.encode(userCreateEditDto.password());
-        return Optional.of(userCreateEditDto.withPassword(passwordHash))
+    public User create(UserCreateDto userCreateDto) {
+        checkUnique(userCreateDto);
+        var passwordHash = passwordEncoder.encode(userCreateDto.password());
+        return Optional.of(userCreateDto.withPassword(passwordHash))
                 .map(userMapper::mapFrom)
                 .map(userRepository::save)
                 .orElseThrow();
     }
 
     @Transactional
-    public Optional<CurrentUserReadDto> update(UserCreateEditDto userCreateEditDto,
+    public Optional<CurrentUserReadDto> update(UserUpdateDto userUpdateDto,
                                                MultipartFile image) {
-        checkUnique(userCreateEditDto);
-        var passwordHash = passwordEncoder.encode(userCreateEditDto.password());
+        checkUnique(userUpdateDto);
+        var passwordHash = userUpdateDto.password() == null ?
+                null : passwordEncoder.encode(userUpdateDto.password());
         return userRepository.findById(getCurrentUser().getId())
                 .map(u -> uploadImage(image, u))
-                .map(u -> userMapper.mapFrom(u, userCreateEditDto.withPassword(passwordHash)))
+                .map(u -> userMapper.mapFrom(u, userUpdateDto.withPassword(passwordHash)))
                 .map(userRepository::saveAndFlush)
                 .map(userMapper::mapCurrentFrom);
     }
@@ -118,5 +121,17 @@ public class UserService implements UserDetailsService {
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public Page<UserReadDto> findAll(UserFilter filter, Pageable pageable) {
+        var predicate = PredicateBuilder.builder()
+                .add(filter.username(), QUser.user.username::containsIgnoreCase)
+                .add(filter.createdAt(), QUser.user.createdAt::eq).buildAnd();
+        if (predicate == null) {
+            return userRepository.findAll(pageable)
+                    .map(userMapper::mapFrom);
+        }
+        return userRepository.findAll(predicate, pageable)
+                .map(userMapper::mapFrom);
     }
 }
