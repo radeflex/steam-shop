@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/005-added-notification.sql
   - include:
       file: db/changelog/changes/006-added-email-confirmation.sql
+  - include:
+      file: db/changelog/changes/007-added-payment.sql

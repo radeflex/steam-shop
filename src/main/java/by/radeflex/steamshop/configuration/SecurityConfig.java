@@ -1,6 +1,7 @@
 package by.radeflex.steamshop.configuration;
 
 import by.radeflex.steamshop.http.filter.JwtFilter;
+import by.radeflex.steamshop.props.JwtProperties;
 import by.radeflex.steamshop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -40,7 +41,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/products", "/products/*").permitAll()
                                 .requestMatchers("/login", "/register",
                                         "/logout", "/swagger-ui/**",
-                                        "/v3/api-docs/**", "confirm-email").permitAll()
+                                        "/v3/api-docs/**", "/confirm-email",
+                                        "/status-webhook")
+                                .permitAll()
                                 .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider(userService))
                 .logout(config -> config

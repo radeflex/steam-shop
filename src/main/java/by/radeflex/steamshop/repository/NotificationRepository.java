@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
     @Query("""
@@ -18,4 +21,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
             """)
     Page<Notification> findAllUnread(Integer userId, Pageable pageable);
     Page<Notification> findAllByUserIdOrUserIdNull(Integer userId, Pageable pageable);
+
+    Optional<Notification> findByPaymentId(UUID paymentId);
 }

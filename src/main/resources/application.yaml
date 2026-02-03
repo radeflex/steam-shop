@@ -34,3 +34,7 @@ jwt:
   secret: secret_key
   cookieName: cookie_name
   expiration-days: 30
+shop:
+  id: 1212
+  token: token
+  return-url: https://return-url.com/success

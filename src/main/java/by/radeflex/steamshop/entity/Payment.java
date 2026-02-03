@@ -7,25 +7,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class UserProductHistory {
+public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Payment payment;
+    private UUID id;
+    @Column(insertable = false, updatable = false)
+    private Integer orderId;
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Product product;
-    private Integer quantity;
-    private String title;
-    private Integer price;
+    private Double amount;
+    private String confirmationUrl;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status;
     @Column(insertable = false)
     private LocalDateTime createdAt;
 }

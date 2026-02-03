@@ -19,12 +19,8 @@ public class Account {
     private String password;
     private String email;
     private String emailPassword;
-    private boolean available;
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status;
     @ManyToOne
     private Product product;
-
-    public Account toggleAvailable() {
-        this.available = !this.available;
-        return this;
-    }
 }

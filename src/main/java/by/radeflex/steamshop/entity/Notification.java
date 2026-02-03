@@ -21,6 +21,10 @@ public class Notification {
     private String text;
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+    @OneToOne(fetch = FetchType.LAZY)
+    private Payment payment;
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
     @OneToOne

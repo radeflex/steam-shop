@@ -20,7 +20,19 @@
         <lombok.version>1.18.30</lombok.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>dynomake.it</id>
+            <url>https://maven.dynomake.it/releases</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <dependency>
+            <groupId>space.dynomake</groupId>
+            <artifactId>yookassa-java-sdk</artifactId>
+            <version>1.0.9</version>
+        </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

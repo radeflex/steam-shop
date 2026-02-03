@@ -3,6 +3,7 @@ package by.radeflex.steamshop.service;
 import by.radeflex.steamshop.dto.NotificationCreateDto;
 import by.radeflex.steamshop.dto.NotificationReadDto;
 import by.radeflex.steamshop.entity.NotificationRead;
+import by.radeflex.steamshop.entity.Payment;
 import by.radeflex.steamshop.mapper.NotificationMapper;
 import by.radeflex.steamshop.repository.NotificationReadRepository;
 import by.radeflex.steamshop.repository.NotificationRepository;
@@ -48,6 +49,16 @@ public class NotificationService {
                 .map(notificationMapper::mapFrom)
                 .orElseThrow();
     }
+
+    @Transactional
+    void sendPayment(Payment payment) {
+        notificationRepository.findByPaymentId(payment.getId())
+                .ifPresentOrElse(n -> {
+                    notificationRepository.saveAndFlush(notificationMapper.mapFrom(n, payment));
+                    notificationReadRepository.deleteByNotification(n);
+                }, () -> notificationRepository.saveAndFlush(notificationMapper.mapFrom(null, payment)));
+    }
+
     @Transactional
     public Optional<NotificationReadDto> sendToUser(Integer userId, NotificationCreateDto dto) {
         return userRepository.findById(userId)

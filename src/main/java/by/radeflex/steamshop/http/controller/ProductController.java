@@ -70,9 +70,4 @@ public class ProductController {
         if (!productService.delete(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(Map.of("message", "Product deleted"));
     }
-
-    @PostMapping("/purchase")
-    public ResponseEntity<?> buyProducts(@RequestBody @Valid List<OrderDto> orderDtos) {
-        return ResponseEntity.ok(productService.purchase(orderDtos));
-    }
 }
