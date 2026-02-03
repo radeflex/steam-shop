@@ -1,6 +1,6 @@
 package by.radeflex.steamshop.service;
 
-import by.radeflex.steamshop.configuration.JwtProperties;
+import by.radeflex.steamshop.props.JwtProperties;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.entity.UserRole;
 import io.jsonwebtoken.Claims;

@@ -1,4 +1,4 @@
-package by.radeflex.steamshop.configuration;
+package by.radeflex.steamshop.props;
 
 import lombok.Getter;
 import lombok.Setter;

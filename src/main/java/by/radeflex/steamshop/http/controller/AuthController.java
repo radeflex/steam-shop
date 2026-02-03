@@ -1,6 +1,6 @@
 package by.radeflex.steamshop.http.controller;
 
-import by.radeflex.steamshop.configuration.JwtProperties;
+import by.radeflex.steamshop.props.JwtProperties;
 import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateDto;
 import by.radeflex.steamshop.service.AuthService;

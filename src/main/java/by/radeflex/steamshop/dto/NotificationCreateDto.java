@@ -1,6 +1,5 @@
 package by.radeflex.steamshop.dto;
 
-import by.radeflex.steamshop.entity.NotificationType;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 
@@ -11,7 +10,6 @@ public record NotificationCreateDto(
         String title,
         @NotBlank(message="не может быть пустым")
         @Size(max = 500, message = "текст уведомления не должен превышать 500 символов")
-        String text,
-        NotificationType type
+        String text
 ) {
 }
