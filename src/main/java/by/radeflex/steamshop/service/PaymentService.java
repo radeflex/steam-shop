@@ -56,8 +56,6 @@ public class PaymentService {
                         mailService.sendAccounts(p, accounts);
                     }
                 }
-                log.info(dto.event().name());
-                log.info(p.getStatus().name());
                 if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
                     notificationService.sendPayment(p);
                 return true;
