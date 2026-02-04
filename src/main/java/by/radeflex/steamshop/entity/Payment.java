@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import org.hibernate.annotations.Generated;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,6 +17,7 @@ import java.util.UUID;
 public class Payment {
     @Id
     private UUID id;
+    @Generated
     @Column(insertable = false, updatable = false)
     private Integer orderId;
     @ManyToOne(fetch = FetchType.LAZY)
