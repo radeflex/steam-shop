@@ -38,6 +38,16 @@ public class User implements UserDetails {
     @Column(insertable = false)
     private Boolean confirmed;
 
+    public boolean withdraw(Integer amount) {
+        if (balance < amount) return false;
+        balance -= amount;
+        return true;
+    }
+
+    public void topUp(Integer amount) {
+        balance += amount;
+    }
+
     @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<UserProduct> cart = new ArrayList<>();

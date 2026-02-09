@@ -37,7 +37,7 @@ public class NotificationMapper {
         var text = switch (payment.getStatus()) {
             case CANCELLED -> "Оплата отменена.";
             case WAITING_FOR_CAPTURE, PENDING -> url;
-            case SUCCEEDED -> "Успешно завершен. Проверьте email.";
+            case SUCCEEDED -> "Успешно завершен.";
         };
         if (n == null)
             return buildPayment(text, payment);

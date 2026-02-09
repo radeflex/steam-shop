@@ -20,12 +20,14 @@ public class Payment {
     @Generated
     @Column(insertable = false, updatable = false)
     private Integer orderId;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private User user;
     private Double amount;
     private String confirmationUrl;
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
+    @Enumerated(EnumType.STRING)
+    private PaymentType type;
     @Column(insertable = false)
     private LocalDateTime createdAt;
 }

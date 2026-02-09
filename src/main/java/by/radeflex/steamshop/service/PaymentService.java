@@ -2,13 +2,13 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.PaymentStatusDto;
 import by.radeflex.steamshop.dto.PurchaseCreateDto;
+import by.radeflex.steamshop.dto.TopUpDto;
 import by.radeflex.steamshop.entity.*;
 import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import me.dynomake.yookassa.Yookassa;
 import me.dynomake.yookassa.model.Amount;
 import me.dynomake.yookassa.model.Confirmation;
@@ -22,8 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -39,23 +39,47 @@ public class PaymentService {
     private final AccountService accountService;
 
     @SneakyThrows
+    public String topUp(TopUpDto topUpDto) {
+        User user = userRepository.findById(AuthService.getCurrentUser().getId())
+                .orElseThrow();
+        Amount amount = new Amount(topUpDto.amount()+"", "RUB");
+        Payment payment = yookassa.createPayment(PaymentRequest.builder()
+                .amount(amount)
+                        .confirmation(Confirmation.builder()
+                                .type("redirect")
+                                .returnUrl(shopProperties.getReturnUrl())
+                                .build())
+                        .savePaymentMethod(true)
+                        .receipt(Receipt.builder()
+                                .customer(ReceiptCustomer.builder()
+                                        .email(user.getEmail())
+                                        .build())
+                                .items(List.of(ReceiptItem.builder()
+                                                .description("Пополнение "+user.getUsername())
+                                                .subject("service")
+                                                .vat(1)
+                                                .amount(amount)
+                                                .quantity(1)
+                                                .paymentMode("full_payment")
+                                        .build()))
+                                .build())
+                        .description("Пополнение "+user.getUsername())
+                .build());
+        var ePayment = savePayment(payment, user, PaymentType.TOP_UP);
+        notificationService.sendPayment(ePayment);
+        return payment.getConfirmation().getConfirmationUrl();
+    }
+
+    @SneakyThrows
     public void handleNotification(PaymentStatusDto dto) {
         var payment = paymentRepository.findById(dto.id());
         try {
             payment.map(p -> {
-                switch (dto.event()) {
-                    case CANCELLED -> {
-                        accountService.unreserve(p);
-                        p.setStatus(PaymentStatus.CANCELLED);
-                        paymentRepository.save(p);
-                    }
-                    case SUCCEEDED -> {
-                        var accounts = accountService.sellAccounts(p);
-                        p.setStatus(PaymentStatus.SUCCEEDED);
-                        paymentRepository.save(p);
-                        mailService.sendAccounts(p, accounts);
-                    }
+                switch (p.getType()) {
+                    case TOP_UP -> processTopUp(dto, p);
+                    case PURCHASE -> processPurchase(dto, p);
                 }
+
                 if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
                     notificationService.sendPayment(p);
                 return true;
@@ -68,8 +92,63 @@ public class PaymentService {
         }
     }
 
+    private void processTopUp(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
+        switch (dto.event()) {
+            case CANCELLED -> {
+                p.setStatus(PaymentStatus.CANCELLED);
+            }
+            case SUCCEEDED -> {
+                p.getUser().topUp(p.getAmount().intValue());
+                p.setStatus(PaymentStatus.SUCCEEDED);
+            }
+        }
+        paymentRepository.save(p);
+    }
+
+    private void processPurchase(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
+        switch (dto.event()) {
+            case CANCELLED -> {
+                accountService.unreserve(p);
+                p.setStatus(PaymentStatus.CANCELLED);
+            }
+            case SUCCEEDED -> {
+                var accounts = accountService.sellAccounts(p);
+                p.setStatus(PaymentStatus.SUCCEEDED);
+                mailService.sendAccounts(p, accounts);
+            }
+        }
+        paymentRepository.save(p);
+    }
+
+    public boolean purchaseViaBalance(PurchaseCreateDto dto) {
+        User user = userRepository.findById(AuthService.getCurrentUser().getId())
+                .orElseThrow();
+        var products = productRepository.findByIdIn(dto.products().keySet());
+        if (products.size() != dto.products().size())
+            throw new IllegalArgumentException("Invalid product ids");
+
+        Double sum = products.stream()
+                .mapToDouble(p -> p.getPrice() * dto.products().get(p.getId()))
+                .sum();
+        if (!user.withdraw(sum.intValue())) {
+            return false;
+        }
+        var ePayment = paymentRepository.save(by.radeflex.steamshop.entity.Payment.builder()
+                .id(UUID.randomUUID())
+                .user(user)
+                .type(PaymentType.PURCHASE)
+                .amount(sum)
+                .status(PaymentStatus.SUCCEEDED)
+                .build());
+        savePaymentItems(dto, products, ePayment);
+        var accounts = accountService.sellAccounts(ePayment);
+        notificationService.sendPayment(ePayment);
+        mailService.sendAccounts(ePayment, accounts);
+        return true;
+    }
+
     @SneakyThrows
-    public String purchase(PurchaseCreateDto dto) {
+    public String purchaseViaCard(PurchaseCreateDto dto) {
         User user = userRepository.findById(AuthService.getCurrentUser().getId())
                 .orElseThrow();
         var products = productRepository.findByIdIn(dto.products().keySet());
@@ -105,8 +184,7 @@ public class PaymentService {
                                         .build()).toList())
                         .build())
                 .build());
-        log.info(payment.getStatus());
-        var ePayment = savePayment(payment, user);
+        var ePayment = savePayment(payment, user, PaymentType.PURCHASE);
         savePaymentItems(dto, products, ePayment);
         notificationService.sendPayment(ePayment);
         return payment.getConfirmation().getConfirmationUrl();
@@ -119,14 +197,15 @@ public class PaymentService {
                             .payment(ePayment)
                             .quantity(dto.products().get(p.getId()))
                     .build());
+            accountService.reserve(ePayment);
         });
-        accountService.reserve(ePayment);
     }
 
-    private by.radeflex.steamshop.entity.Payment savePayment(Payment payment, User user) {
+    private by.radeflex.steamshop.entity.Payment savePayment(Payment payment, User user, PaymentType type) {
         return paymentRepository.save(by.radeflex.steamshop.entity.Payment.builder()
                 .id(payment.getId())
                 .confirmationUrl(payment.getConfirmation().getConfirmationUrl())
+                .type(type)
                 .status(PaymentStatus.valueOf(payment.getStatus().toUpperCase()))
                 .amount(Double.valueOf(payment.getAmount().getValue()))
                 .user(user)
