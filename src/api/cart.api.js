@@ -14,3 +14,6 @@ export const removeFromCart = id =>
 
 export const purchase = (data) =>
   api.post("/purchase", data);
+
+export const purchaseViaBalance = (data) =>
+  api.post("/purchase-balance", data);

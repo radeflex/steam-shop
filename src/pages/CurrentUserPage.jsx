@@ -1,16 +1,26 @@
-// UserPage.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { getCurrentUser, getPurchaseHistory } from "../api/user.api";
+import {
+  getCurrentUser,
+  getPurchaseHistory,
+  topUpBalance
+} from "../api/user.api";
+
 import { getImageUrl } from "../api/file.api";
 import api from "../api/axios";
 
 export default function CurrentUserPage() {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState(null);
+
   const [sending, setSending] = useState(false);
+
+  // пополнение
+  const [showTopUp, setShowTopUp] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState("");
+  const [topUpLoading, setTopUpLoading] = useState(false);
 
   useEffect(() => {
     getCurrentUser().then(r => setUser(r.data));
@@ -34,6 +44,64 @@ export default function CurrentUserPage() {
       setSending(false);
     }
   };
+
+  const handleTopUp = async () => {
+  if (topUpLoading) return;
+
+  const amount = parseInt(topUpAmount, 10);
+
+  if (!amount || amount <= 0) {
+    toast.warn("Введите сумму больше 0");
+    return;
+  }
+
+  if (amount > 100000) {
+    toast.warn("Слишком большая сумма 😅");
+    return;
+  }
+
+  try {
+    setTopUpLoading(true);
+
+    const r = await topUpBalance(amount);
+
+    const url = r.data?.url;
+
+    if (!url) {
+      toast.error("❌ Сервер не вернул ссылку на оплату");
+      return;
+    }
+
+    toast.info("⏳ Перенаправляем на оплату...", { autoClose: 1500 });
+    window.location.href = url;
+
+  } catch (err) {
+    const status = err?.response?.status;
+    const data = err?.response?.data;
+
+    // 💥 обработка 400 с errors
+    if (status === 400 && data?.errors) {
+      const errors = Array.isArray(data.errors)
+        ? data.errors
+        : Object.values(data.errors).flat();
+
+      if (errors.length > 0) {
+        errors.forEach(e => toast.error(`❌ ${e}`));
+      } else {
+        toast.error("❌ Ошибка валидации");
+      }
+
+      return;
+    }
+
+    toast.error("❌ Не удалось создать платеж. Попробуйте позже.");
+    console.error(err);
+
+  } finally {
+    setTopUpLoading(false);
+  }
+};
+
 
   if (!user) return <p className="mt-3">Loading user...</p>;
 
@@ -76,7 +144,57 @@ export default function CurrentUserPage() {
                 </button>
               )}
             </p>
-            <p><strong>Balance:</strong> {user.balance} ₽</p>
+
+            {/* Balance + TopUp */}
+            <p className="mb-2">
+              <strong>Balance:</strong> {user.balance} ₽{" "}
+              <button
+                className="btn btn-sm btn-outline-success ms-2"
+                onClick={() => setShowTopUp(v => !v)}
+              >
+                💳 Пополнить
+              </button>
+            </p>
+
+            {showTopUp && (
+              <div className="border rounded p-2 mb-2" style={{ maxWidth: "280px" }}>
+                <label className="form-label mb-1">
+                  Сумма пополнения (₽)
+                </label>
+
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  value={topUpAmount}
+                  min={1}
+                  placeholder="Минимум 10₽"
+                  onChange={(e) => setTopUpAmount(e.target.value)}
+                  disabled={topUpLoading}
+                />
+
+                <div className="d-flex gap-2 mt-2">
+                  <button
+                    className="btn btn-sm btn-success"
+                    onClick={handleTopUp}
+                    disabled={topUpLoading}
+                  >
+                    {topUpLoading ? "Создание..." : "Перейти к оплате"}
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => {
+                      setShowTopUp(false);
+                      setTopUpAmount("");
+                    }}
+                    disabled={topUpLoading}
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            )}
+
             <p><strong>Points:</strong> {user.points}</p>
             <p>
               <strong>Joined at:</strong>{" "}

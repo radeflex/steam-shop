@@ -19,3 +19,6 @@ export const deleteAvatar = () =>
 
 export const getPurchaseHistory = pageable =>
   api.get("/users/current/product-history", { params: pageable });
+
+export const topUpBalance = (amount) =>
+  api.post("/top-up", { amount });
