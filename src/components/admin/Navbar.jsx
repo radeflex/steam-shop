@@ -35,6 +35,9 @@ export default function AdminNavbar() {
             <li className="nav-item">
               <NavLink to="/admin/notifications" className={navLinkClass}>Notifications</NavLink>
             </li>
+            <li className="nav-item">
+              <NavLink to="/admin/accounts" className={navLinkClass}>Accounts</NavLink>
+            </li>
           </ul>
 
           <div className="d-flex align-items-center gap-2">

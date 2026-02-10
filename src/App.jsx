@@ -17,6 +17,7 @@ import AdminNotificationCreatePage from "./pages/admin/NotificationCreatePage";
 import AdminProductFormPage from "./pages/admin/ProductFormPage";
 import AdminNotificationsPage from "./pages/admin/NotificationsPage";
 import AdminRoute from "./components/admin/AdminRoute";
+import AdminAccountsPage from "./pages/admin/AccountsPage";
 
 export default function App() {
   return (
@@ -44,7 +45,7 @@ export default function App() {
           {/* Notifications */}
           <Route path="notifications/create" element={<AdminNotificationCreatePage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
-
+          <Route path="accounts" element={<AdminAccountsPage />} />
           {/* Default */}
           <Route index element={<Navigate to="products" />} />
         </Route>
