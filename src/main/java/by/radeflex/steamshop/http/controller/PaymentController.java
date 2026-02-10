@@ -4,7 +4,7 @@ import by.radeflex.steamshop.dto.PaymentStatusDto;
 import by.radeflex.steamshop.dto.PurchaseCreateDto;
 import by.radeflex.steamshop.dto.TopUpDto;
 import by.radeflex.steamshop.service.PaymentService;
-import by.radeflex.steamshop.validation.ValidationUtils;
+import by.radeflex.steamshop.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

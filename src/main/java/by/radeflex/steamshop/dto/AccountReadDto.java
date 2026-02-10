@@ -1,12 +1,16 @@
 package by.radeflex.steamshop.dto;
 
+import by.radeflex.steamshop.entity.AccountStatus;
 import lombok.Builder;
+
+import java.time.LocalDateTime;
 
 @Builder
 public record AccountReadDto(
+        Integer id,
         Integer productId,
-        String username,
-        String password,
-        String email,
-        String emailPassword
-) {}
+        AccountStatus status,
+        Integer createdById,
+        LocalDateTime createdAt
+) {
+}

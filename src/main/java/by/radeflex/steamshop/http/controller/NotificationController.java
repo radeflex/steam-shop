@@ -3,7 +3,7 @@ package by.radeflex.steamshop.http.controller;
 import by.radeflex.steamshop.dto.NotificationCreateDto;
 import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.service.NotificationService;
-import by.radeflex.steamshop.validation.ValidationUtils;
+import by.radeflex.steamshop.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

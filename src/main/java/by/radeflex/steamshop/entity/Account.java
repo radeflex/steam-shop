@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -21,6 +23,11 @@ public class Account {
     private String emailPassword;
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+    @Column(insertable = false)
+    private LocalDateTime createdAt;
 }

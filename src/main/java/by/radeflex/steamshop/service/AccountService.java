@@ -1,18 +1,28 @@
 package by.radeflex.steamshop.service;
 
-import by.radeflex.steamshop.entity.Account;
-import by.radeflex.steamshop.entity.AccountStatus;
-import by.radeflex.steamshop.entity.Payment;
-import by.radeflex.steamshop.entity.PaymentItem;
+import by.radeflex.steamshop.dto.AccountCreateDto;
+import by.radeflex.steamshop.dto.AccountReadDto;
+import by.radeflex.steamshop.dto.CsvResponseDto;
+import by.radeflex.steamshop.entity.*;
 import by.radeflex.steamshop.exception.AccountLackException;
+import by.radeflex.steamshop.mapper.AccountMapper;
 import by.radeflex.steamshop.repository.AccountRepository;
 import by.radeflex.steamshop.repository.PaymentItemRepository;
+import by.radeflex.steamshop.repository.ProductRepository;
+import by.radeflex.steamshop.utils.CsvUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,6 +30,8 @@ import java.util.stream.Collectors;
 public class AccountService {
     private final AccountRepository accountRepository;
     private final PaymentItemRepository paymentItemRepository;
+    private final ProductRepository productRepository;
+    private final AccountMapper accountMapper;
 
     public boolean exists(Integer productId) {
         return accountRepository.existsByProductId(productId);
@@ -63,5 +75,35 @@ public class AccountService {
                     accountRepository.save(a);
                 })
                 .collect(Collectors.groupingBy(a -> a.getProduct().getTitle()));
+    }
+
+    @Transactional
+    public Optional<AccountReadDto> create(AccountCreateDto accountCreateDto) {
+        return productRepository.findById(accountCreateDto.productId())
+                .map(p -> accountMapper.mapFrom(accountCreateDto))
+                .map(accountRepository::save)
+                .map(accountMapper::mapFrom);
+    }
+
+    public CsvResponseDto readCsv(MultipartFile file) {
+        int inserted = 0;
+        List<Integer> errorRows = new ArrayList<>();
+        var accounts = CsvUtils.readAccounts(file, ';').stream()
+                .map(accountMapper::mapFrom).toList();
+        for (int i = 0; i < accounts.size(); ++i) {
+            try {
+                accountRepository.save(accounts.get(i));
+                inserted++;
+            } catch (DataIntegrityViolationException e) {
+                errorRows.add(i + 1);
+            }
+        }
+        return new CsvResponseDto(accounts.size(), inserted, errorRows);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AccountReadDto> findAll(Pageable pageable) {
+        return accountRepository.findAll(pageable)
+                .map(accountMapper::mapFrom);
     }
 }

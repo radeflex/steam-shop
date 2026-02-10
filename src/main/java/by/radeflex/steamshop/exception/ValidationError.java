@@ -1,4 +1,4 @@
-package by.radeflex.steamshop.validation;
+package by.radeflex.steamshop.exception;
 
 import lombok.Getter;
 

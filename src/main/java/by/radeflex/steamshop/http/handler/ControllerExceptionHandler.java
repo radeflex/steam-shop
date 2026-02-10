@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.http.handler;
 
 import by.radeflex.steamshop.exception.ObjectExistsException;
-import by.radeflex.steamshop.validation.ValidationError;
+import by.radeflex.steamshop.exception.ValidationError;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

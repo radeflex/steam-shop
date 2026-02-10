@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static by.radeflex.steamshop.validation.ValidationUtils.checkErrors;
+import static by.radeflex.steamshop.utils.ValidationUtils.checkErrors;
 
 @RestController
 @RequiredArgsConstructor

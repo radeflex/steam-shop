@@ -85,7 +85,7 @@ public class UserService implements UserDetailsService {
                 null : passwordEncoder.encode(userUpdateDto.password());
         return userRepository.findById(getCurrentUser().getId())
                 .map(u -> {
-                    if (!userUpdateDto.email().isBlank()) u.setConfirmed(false);
+                    if (userUpdateDto.email() != null) u.setConfirmed(false);
                     return u;
                 }).map(u -> uploadImage(image, u))
                 .map(u -> userMapper.mapFrom(u, userUpdateDto.withPassword(passwordHash)))

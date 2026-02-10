@@ -1,6 +1,5 @@
 package by.radeflex.steamshop.http.controller;
 
-import by.radeflex.steamshop.dto.OrderDto;
 import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.dto.ProductCreateDto;
 import by.radeflex.steamshop.dto.ProductUpdateDto;
@@ -19,10 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
-import static by.radeflex.steamshop.validation.ValidationUtils.checkErrors;
+import static by.radeflex.steamshop.utils.ValidationUtils.checkErrors;
 
 @RestController
 @RequestMapping("/products")
