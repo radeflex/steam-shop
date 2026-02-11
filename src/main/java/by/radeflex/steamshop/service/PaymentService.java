@@ -5,6 +5,7 @@ import by.radeflex.steamshop.dto.PurchaseCreateDto;
 import by.radeflex.steamshop.dto.TopUpDto;
 import by.radeflex.steamshop.entity.*;
 import by.radeflex.steamshop.exception.AccountLackException;
+import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,8 @@ public class PaymentService {
     private final PaymentItemRepository paymentItemRepository;
     private final MailService mailService;
     private final AccountService accountService;
+    private final UserProductHistoryRepository userProductHistoryRepository;
+    private final ProductHistoryMapper productHistoryMapper;
 
     @SneakyThrows
     public String topUp(TopUpDto topUpDto) {
@@ -94,9 +97,7 @@ public class PaymentService {
 
     private void processTopUp(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
         switch (dto.event()) {
-            case CANCELLED -> {
-                p.setStatus(PaymentStatus.CANCELLED);
-            }
+            case CANCELLED -> p.setStatus(PaymentStatus.CANCELLED);
             case SUCCEEDED -> {
                 p.getUser().topUp(p.getAmount().intValue());
                 p.setStatus(PaymentStatus.SUCCEEDED);
@@ -115,9 +116,16 @@ public class PaymentService {
                 var accounts = accountService.sellAccounts(p);
                 p.setStatus(PaymentStatus.SUCCEEDED);
                 mailService.sendAccounts(p, accounts);
+                saveHistory(paymentItemRepository.findAllByPayment(p));
             }
         }
         paymentRepository.save(p);
+    }
+
+    private void saveHistory(List<PaymentItem> paymentItemRepository) {
+        paymentItemRepository.stream()
+                .map(productHistoryMapper::mapFrom)
+                .forEach(userProductHistoryRepository::save);
     }
 
     public boolean purchaseViaBalance(PurchaseCreateDto dto) {
@@ -140,7 +148,8 @@ public class PaymentService {
                 .amount(sum)
                 .status(PaymentStatus.SUCCEEDED)
                 .build());
-        savePaymentItems(dto, products, ePayment);
+        List<PaymentItem> items = savePaymentItems(dto, products, ePayment);
+        saveHistory(items);
         var accounts = accountService.sellAccounts(ePayment);
         notificationService.sendPayment(ePayment);
         mailService.sendAccounts(ePayment, accounts);
@@ -190,15 +199,17 @@ public class PaymentService {
         return payment.getConfirmation().getConfirmationUrl();
     }
 
-    private void savePaymentItems(PurchaseCreateDto dto, List<Product> products, by.radeflex.steamshop.entity.Payment ePayment) {
-        products.forEach(p -> {
-            paymentItemRepository.save(PaymentItem.builder()
+    private List<PaymentItem> savePaymentItems(PurchaseCreateDto dto, List<Product> products, by.radeflex.steamshop.entity.Payment ePayment) {
+        return products.stream()
+                .map(p -> PaymentItem.builder()
                             .product(p)
                             .payment(ePayment)
                             .quantity(dto.products().get(p.getId()))
-                    .build());
+                            .build())
+                .peek(p -> {
+            paymentItemRepository.save(p);
             accountService.reserve(ePayment);
-        });
+        }).toList();
     }
 
     private by.radeflex.steamshop.entity.Payment savePayment(Payment payment, User user, PaymentType type) {

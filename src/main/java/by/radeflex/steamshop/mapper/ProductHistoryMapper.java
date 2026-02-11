@@ -1,21 +1,18 @@
 package by.radeflex.steamshop.mapper;
 
 import by.radeflex.steamshop.dto.ProductHistoryReadDto;
-import by.radeflex.steamshop.entity.Product;
-import by.radeflex.steamshop.entity.UserProductHistory;
+import by.radeflex.steamshop.entity.*;
 import org.springframework.stereotype.Component;
-
-import static by.radeflex.steamshop.service.AuthService.getCurrentUser;
 
 @Component
 public class ProductHistoryMapper {
-    public UserProductHistory mapFrom(Product product, int quantity) {
+    public UserProductHistory mapFrom(PaymentItem pi) {
         return UserProductHistory.builder()
-                .product(product)
-                .user(getCurrentUser())
-                .title(product.getTitle())
-                .price(product.getPrice())
-                .quantity(quantity)
+                .product(pi.getProduct())
+                .user(pi.getPayment().getUser())
+                .title(pi.getProduct().getTitle())
+                .price(pi.getProduct().getPrice())
+                .quantity(pi.getQuantity())
                 .build();
     }
     public ProductHistoryReadDto mapFrom(UserProductHistory userProductHistory) {
