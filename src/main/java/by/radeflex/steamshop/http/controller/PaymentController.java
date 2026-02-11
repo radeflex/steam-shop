@@ -1,7 +1,6 @@
 package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.dto.PaymentStatusDto;
-import by.radeflex.steamshop.dto.PurchaseCreateDto;
 import by.radeflex.steamshop.dto.TopUpDto;
 import by.radeflex.steamshop.service.PaymentService;
 import by.radeflex.steamshop.utils.ValidationUtils;
@@ -9,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,15 +26,29 @@ public class PaymentController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/purchase")
-    public ResponseEntity<?> purchase(@RequestBody PurchaseCreateDto cartItems) {
-        var url = paymentService.purchaseViaCard(cartItems);
+    @PostMapping("/purchase-balance/{productId}")
+    public ResponseEntity<?> purchaseViaBalance(@PathVariable Integer productId) {
+        if (!paymentService.purchaseViaBalance(productId)) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/purchase-card/{productId}")
+    public ResponseEntity<?> purchaseCartViaCard(@PathVariable Integer productId) {
+        var url = paymentService.purchaseViaCard(productId);
+        return ResponseEntity.ok(Map.of("url", url));
+    }
+
+    @PostMapping("/purchase-card")
+    public ResponseEntity<?> purchaseCartViaCard() {
+        var url = paymentService.purchaseCartViaCard();
         return ResponseEntity.ok(Map.of("url", url));
     }
 
     @PostMapping("/purchase-balance")
-    public ResponseEntity<?> purchaseViaBalance(@RequestBody PurchaseCreateDto cartItems) {
-        if (!paymentService.purchaseViaBalance(cartItems)) {
+    public ResponseEntity<?> purchaseCartViaBalance() {
+        if (!paymentService.purchaseCartViaBalance()) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok().build();

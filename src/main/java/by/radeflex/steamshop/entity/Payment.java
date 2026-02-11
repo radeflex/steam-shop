@@ -28,6 +28,8 @@ public class Payment {
     private PaymentStatus status;
     @Enumerated(EnumType.STRING)
     private PaymentType type;
+    @Enumerated(EnumType.STRING)
+    private PaymentSource source;
     @Column(insertable = false)
     private LocalDateTime createdAt;
 }

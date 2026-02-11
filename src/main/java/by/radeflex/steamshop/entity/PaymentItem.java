@@ -15,7 +15,7 @@ public class PaymentItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     private Payment payment;
     @ManyToOne
     private Product product;

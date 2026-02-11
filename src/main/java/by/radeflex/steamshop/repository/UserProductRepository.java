@@ -7,7 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface UserProductRepository extends JpaRepository<UserProduct, Integer> {
-    Page<UserProduct> findAllByUser(User user, Pageable pageable);
+    Page<UserProduct> findPageByUser(User user, Pageable pageable);
+    List<UserProduct> findAllByUser(User user);
+
+    void deleteAllByUser(User user);
 }

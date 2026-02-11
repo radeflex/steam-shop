@@ -24,7 +24,7 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public Page<CartProductReadDto> findAll(Pageable pageable) {
-        return userProductRepository.findAllByUser(getCurrentUser(), pageable)
+        return userProductRepository.findPageByUser(getCurrentUser(), pageable)
                 .map(cartMapper::mapFrom);
     }
 

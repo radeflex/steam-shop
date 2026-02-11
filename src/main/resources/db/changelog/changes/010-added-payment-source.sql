@@ -1,0 +1,1 @@
+ALTER TABLE payment ADD COLUMN source VARCHAR(20);
