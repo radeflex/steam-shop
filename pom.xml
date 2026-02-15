@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
     <groupId>by.radeflex</groupId>
-    <artifactId>steam-shop</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>steam-shop</name>
-    <description>steam-shop</description>
+    <artifactId>steam-shop-backend</artifactId>
+    <version>1.0.0</version>
+    <name>steam-shop-backend</name>
+    <description>steam-shop-backend</description>
 
     <properties>
         <java.version>17</java.version>
@@ -104,7 +104,6 @@
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
             <version>2.36.3</version>
-<!--            <scope>compile</scope>-->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

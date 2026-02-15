@@ -2,7 +2,7 @@ spring:
   profiles:
     active: local
   application:
-    name: steam-shop
+    name: steam-shop-backend
   mail:
     host: host
     port: 777
