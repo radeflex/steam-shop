@@ -7,7 +7,7 @@ on:
 
 jobs:
   compile:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     name: compilation
     steps:
       - name: checkout
@@ -23,7 +23,7 @@ jobs:
         run: ./mvnw clean compile
 
   build:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     name: build backend
     needs: [compile]
     steps:
@@ -40,7 +40,7 @@ jobs:
         run: ./mvnw clean package
 
   build-docker:
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     name: build docker image
     needs: [build]
     steps:
