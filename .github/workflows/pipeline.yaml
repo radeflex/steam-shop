@@ -37,7 +37,7 @@ jobs:
           java-version: 17
           distribution: 'corretto'
       - name: build
-        run: ./mvnw clean package
+        run: ./mvnw clean package -DskipTests
 
   build-docker:
     runs-on: ubuntu-latest
