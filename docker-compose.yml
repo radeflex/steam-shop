@@ -1,0 +1,47 @@
+services:
+  postgres:
+    container_name: postgres-stsh
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PG_DATA: /var/lib/postgresql/data
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres:/data/postgres
+    networks:
+      - spring
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+  stsh-api:
+    container_name: stsh-api
+    image: ghcr.io/radeflex/stsh-api:latest
+    environment:
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      DB_URL: jdbc:postgresql://postgres-stsh:5432/${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      S3_ACCESS: ${S3_ACCESS}
+      S3_SECRET: ${S3_SECRET}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      SHOP_ID: ${SHOP_ID}
+      SHOP_TOKEN: ${SHOP_TOKEN}
+    ports:
+      - "8443:8443"
+    networks:
+      - spring
+    depends_on:
+      - postgres
+
+networks:
+  spring:
+    driver: bridge
+volumes:
+  postgres:
+    driver: local
