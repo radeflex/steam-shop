@@ -1,0 +1,60 @@
+package by.radeflex.steamshop.service;
+
+import by.radeflex.steamshop.dto.CartProductReadDto;
+import by.radeflex.steamshop.entity.UserProduct;
+import by.radeflex.steamshop.mapper.CartMapper;
+import by.radeflex.steamshop.repository.ProductRepository;
+import by.radeflex.steamshop.repository.UserProductRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static by.radeflex.steamshop.service.AuthService.getCurrentUser;
+
+@Service
+@RequiredArgsConstructor
+public class CartService {
+    private final ProductRepository productRepository;
+    private final UserProductRepository userProductRepository;
+    private final CartMapper cartMapper;
+
+    @Transactional(readOnly = true)
+    public Page<CartProductReadDto> findAll(Pageable pageable) {
+        return userProductRepository.findPageByUser(getCurrentUser(), pageable)
+                .map(cartMapper::mapFrom);
+    }
+
+    @Transactional
+    public Optional<CartProductReadDto> add(Integer productId) {
+        return productRepository.findById(productId)
+                .map(product -> {
+                    var user = getCurrentUser();
+                    var userProduct = new UserProduct(null, user, product, 1);
+                    userProductRepository.save(userProduct);
+                    return userProduct;
+                }).map(cartMapper::mapFrom);
+    }
+
+    @Transactional
+    public boolean delete(Integer userProductId) {
+        return userProductRepository.findById(userProductId)
+                .map(up -> {
+                    userProductRepository.delete(up);
+                    return true;
+                }).orElse(false);
+    }
+
+    @Transactional
+    public Optional<CartProductReadDto> updateQuantity(Integer userProductId, Integer quantity) {
+        return userProductRepository.findById(userProductId)
+                .map(up -> {
+                    up.setQuantity(quantity);
+                    userProductRepository.saveAndFlush(up);
+                    return up;
+                }).map(cartMapper::mapFrom);
+    }
+}
