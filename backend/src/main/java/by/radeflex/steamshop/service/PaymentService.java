@@ -58,6 +58,7 @@ public class PaymentService {
                         .title("Пополнение "+user.getUsername())
                         .price(sum)
                         .build())
+                .quantity(1)
                 .build();
         Payment payment = buildPayment((double)sum, List.of(up), user);
         var ePayment = savePayment(payment, user, PaymentType.TOP_UP, null);
