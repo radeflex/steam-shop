@@ -1,0 +1,41 @@
+name: stsh frontend pipeline
+on:
+  push:
+    paths:
+      - frontend/**
+      - .github/workflows/*-frontend.yml
+      - 'docker-compose.yml'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build front
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: extract project version
+        id: extract_version
+        run: |
+          cd frontend
+          echo "VERSION=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
+      - name: login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: build docker
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/stsh-ui:${{ steps.extract_version.outputs.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/stsh-ui:latest

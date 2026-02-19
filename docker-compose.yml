@@ -18,7 +18,7 @@ services:
     container_name: stsh-api
     image: ghcr.io/radeflex/stsh-api:latest
     environment:
-      MAIL_USER: ${MAIL_USER}
+      MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
 
       DB_URL: jdbc:postgresql://postgres-stsh:5432/${DB_NAME}
@@ -38,6 +38,15 @@ services:
       - spring
     depends_on:
       - postgres
+  stsh-ui:
+    container_name: stsh-ui
+    image: ghcr.io/radeflex/stsh-ui:latest
+    networks:
+      - spring
+    depends_on:
+      - stsh-api
+    ports:
+      - "3000:80"
 
 networks:
   spring:
