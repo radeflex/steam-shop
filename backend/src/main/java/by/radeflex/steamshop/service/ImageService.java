@@ -2,6 +2,8 @@ package by.radeflex.steamshop.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,9 +12,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageService {
@@ -35,18 +40,30 @@ public class ImageService {
 
     public Optional<byte[]> get(String key) {
         try {
-            if (key.equals("no-avatar")) {
-                var img = ClassLoader.getSystemResourceAsStream("files/no-avatar.png")
-                        .readAllBytes();
-                return Optional.of(img);
+            if ("no-avatar".equals(key)) {
+                return loadDefaultAvatar();
             }
-            return Optional.of(s3Client.getObject(GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build()).readAllBytes());
+            return loadFromS3(key);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to log image: {}", key, e);
             return Optional.empty();
+        }
+    }
+
+    private @NonNull Optional<byte[]> loadFromS3(String key) throws IOException {
+        try (var is = s3Client.getObject(GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build())) {
+            return Optional.of(is.readAllBytes());
+        }
+    }
+
+    private @NonNull Optional<byte[]> loadDefaultAvatar() throws IOException {
+        var img = getClass().getResourceAsStream("/files/no-avatar.png");
+        if (img == null) return Optional.empty();
+        try (img) {
+            return Optional.of(img.readAllBytes());
         }
     }
 
