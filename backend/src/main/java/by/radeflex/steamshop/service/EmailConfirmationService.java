@@ -14,6 +14,7 @@ public class EmailConfirmationService {
     private final EmailConfirmationRepository emailConfirmationRepository;
     private final UserRepository userRepository;
     private final MailService mailService;
+    private final AuthService authService;
 
     @Transactional
     public boolean confirmEmail(UUID token) {
@@ -28,7 +29,7 @@ public class EmailConfirmationService {
     }
 
     public boolean sendEmailConfirmation() {
-        return userRepository.findById(AuthService.getCurrentUser().getId())
+        return userRepository.findById(authService.getCurrentUser().getId())
                 .filter(u -> !u.getConfirmed())
                 .map(u -> {
                     mailService.sendRegistration(u);

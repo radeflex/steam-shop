@@ -13,7 +13,6 @@ import by.radeflex.steamshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-
-import static by.radeflex.steamshop.service.AuthService.getCurrentUser;
 
 @Service
 @RequiredArgsConstructor
@@ -34,30 +31,30 @@ public class UserService implements UserDetailsService {
     private final ProductHistoryMapper productHistoryMapper;
     private final UserProductHistoryRepository userProductHistoryRepository;
     private final ImageService imageService;
+    private final AuthService authService;
 
     private void checkUnique(UserInfo dto) {
         List<String> existing = new ArrayList<>();
-        var user = getCurrentUser();
-        var byUsername = dto.username() == null ? null : userRepository.findBy(QUser.user.username.eq(dto.username()),
-                FluentQuery.FetchableFluentQuery::firstValue);
-        var byEmail = dto.email() == null ? null : userRepository.findBy(QUser.user.email.eq(dto.email()),
-                FluentQuery.FetchableFluentQuery::firstValue);
-        if (byUsername != null) {
-            if (user == null || user != null && !byUsername.equals(user)) {
+        var user = authService.getCurrentUser();
+        var byUsername = dto.username() == null ? Optional.empty()
+                : userRepository.findByUsername(dto.username());
+        var byEmail = dto.email() == null ? Optional.empty()
+                : userRepository.findByEmail(dto.email());
+        byUsername.ifPresent(u -> {
+            if (!u.equals(user))
                 existing.add("username");
-            }
-        }
-        if (byEmail != null)
-            if (user == null || user != null && !byEmail.equals(user)) {
+        });
+        byEmail.ifPresent(u -> {
+            if (!u.equals(user))
                 existing.add("email");
-            }
+        });
         if (!existing.isEmpty())
             throw new ObjectExistsException(existing);
     }
 
     @Transactional(readOnly = true)
     public CurrentUserReadDto findCurrent() {
-        return userRepository.findById(getCurrentUser().getId())
+        return userRepository.findById(authService.getCurrentUser().getId())
                 .map(userMapper::mapCurrentFrom).orElseThrow();
     }
 
@@ -83,11 +80,11 @@ public class UserService implements UserDetailsService {
         checkUnique(userUpdateDto);
         var passwordHash = userUpdateDto.password() == null ?
                 null : passwordEncoder.encode(userUpdateDto.password());
-        return userRepository.findById(getCurrentUser().getId())
+        return userRepository.findById(authService.getCurrentUser().getId())
                 .map(u -> {
                     if (userUpdateDto.email() != null) u.setConfirmed(false);
                     return u;
-                }).map(u -> uploadImage(image, u))
+                }).map(u -> uploadAvatar(image, u))
                 .map(u -> userMapper.mapFrom(u, userUpdateDto.withPassword(passwordHash)))
                 .map(userRepository::saveAndFlush)
                 .map(userMapper::mapCurrentFrom);
@@ -95,7 +92,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void resetAvatar() {
-        var user = getCurrentUser();
+        var user = authService.getCurrentUser();
         if (user.getAvatarUrl() != null) {
             imageService.delete(user.getAvatarUrl());
             user.setAvatarUrl(null);
@@ -103,7 +100,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    private User uploadImage(MultipartFile file, User u) {
+    private User uploadAvatar(MultipartFile file, User u) {
         if (file != null) {
             if (u.getAvatarUrl() != null)
                 imageService.delete(u.getAvatarUrl());
@@ -115,7 +112,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Page<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
-        var user = getCurrentUser();
+        var user = authService.getCurrentUser();
         return userProductHistoryRepository.findByUser(user, pageable)
                 .map(productHistoryMapper::mapFrom);
     }

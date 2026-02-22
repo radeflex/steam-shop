@@ -46,10 +46,11 @@ public class PaymentService {
     private final ProductHistoryMapper productHistoryMapper;
     private final UserProductRepository userProductRepository;
     private final ProductRepository productRepository;
+    private final AuthService authService;
 
     @SneakyThrows
     public String topUp(TopUpDto topUpDto) {
-        User user = userRepository.findById(AuthService.getCurrentUser().getId())
+        User user = userRepository.findById(authService.getCurrentUser().getId())
                 .orElseThrow();
         int sum = topUpDto.amount();
         var up = UserProduct.builder()
@@ -120,7 +121,7 @@ public class PaymentService {
     }
 
     public boolean purchaseCartViaBalance() {
-        var user = userRepository.findById(AuthService.getCurrentUser().getId()).orElseThrow();
+        var user = userRepository.findById(authService.getCurrentUser().getId()).orElseThrow();
         var cart = userProductRepository.findAllByUser(user);
 
         Double sum = cart.stream()
@@ -149,7 +150,7 @@ public class PaymentService {
 
     @SneakyThrows
     public String purchaseCartViaCard() {
-        var user = userRepository.findById(AuthService.getCurrentUser().getId()).orElseThrow();
+        var user = userRepository.findById(authService.getCurrentUser().getId()).orElseThrow();
         var cart = userProductRepository.findAllByUser(user);
         Double sum = cart.stream()
                 .mapToDouble(up -> up.getProduct().getPrice() * up.getQuantity())
@@ -216,7 +217,7 @@ public class PaymentService {
     }
 
     public boolean purchaseViaBalance(Integer productId) {
-        var u = userRepository.findById(AuthService.getCurrentUser().getId()).orElseThrow();
+        var u = userRepository.findById(authService.getCurrentUser().getId()).orElseThrow();
         var p = productRepository.findById(productId);
         if (p.isEmpty() || !u.withdraw(p.get().getPrice()))
             return false;
@@ -239,7 +240,7 @@ public class PaymentService {
 
     @SneakyThrows
     public Optional<String> purchaseViaCard(Integer productId) {
-        var u = AuthService.getCurrentUser();
+        var u = authService.getCurrentUser();
         var p = productRepository.findById(productId);
         if (p.isEmpty())
             return Optional.empty();

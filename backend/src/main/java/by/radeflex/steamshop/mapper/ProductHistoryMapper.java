@@ -23,6 +23,7 @@ public class ProductHistoryMapper {
                 .title(userProductHistory.getProduct().getTitle())
                 .price(userProductHistory.getProduct().getPrice())
                 .quantity(userProductHistory.getQuantity())
+                .createdAt(userProductHistory.getCreatedAt())
                 .build();
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AccountMapper {
+    private final AuthService authService;
+
     private Account buildAccount(Account account, AccountCreateDto accountCreateDto) {
         account.setUsername(accountCreateDto.username());
         account.setPassword(accountCreateDto.password());
@@ -19,7 +21,7 @@ public class AccountMapper {
         account.setEmailPassword(accountCreateDto.emailPassword());
         account.setStatus(AccountStatus.AVAILABLE);
         account.setProduct(Product.builder().id(accountCreateDto.productId()).build());
-        account.setCreatedBy(AuthService.getCurrentUser());
+        account.setCreatedBy(authService.getCurrentUser());
         return account;
     }
     public AccountReadDto mapFrom(Account account) {

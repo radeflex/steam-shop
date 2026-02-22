@@ -7,10 +7,14 @@ import by.radeflex.steamshop.entity.NotificationType;
 import by.radeflex.steamshop.entity.Payment;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class NotificationMapper {
+    private final AuthService authService;
+
     private Notification buildPayment(String text, Payment payment) {
         return Notification.builder()
                 .user(payment.getUser())
@@ -53,7 +57,7 @@ public class NotificationMapper {
                 .title(dto.title())
                 .text(dto.text())
                 .type(NotificationType.INFO)
-                .createdBy(AuthService.getCurrentUser())
+                .createdBy(authService.getCurrentUser())
                 .user(user)
                 .build();
     }

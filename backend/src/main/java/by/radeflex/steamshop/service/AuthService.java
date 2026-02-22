@@ -18,7 +18,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final MailService mailService;
 
-    public static User getCurrentUser() {
+    public User getCurrentUser() {
         var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof User)
             return (User) principal;
