@@ -43,6 +43,6 @@ jwt:
 shop:
   id: ${SHOP_ID}
   token: ${SHOP_TOKEN}
-  return-url: http://localhost:3000/products
+  return-url: ${UI_URL}
 cors:
   allowed-origins: http://localhost:3000

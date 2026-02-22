@@ -43,7 +43,7 @@
     <h2>Привет, ${username}!</h2>
     <p>Спасибо за регистрацию на нашем сервисе.</p>
     <p>Для подтверждения вашего email, пожалуйста, нажмите на кнопку ниже:</p>
-    <a class="btn" href="http://localhost:3000/confirm-email?token=${token}">Подтвердить Email</a>
+    <a class="btn" href="${url}/confirm-email?token=${token}">Подтвердить Email</a>
     <p class="footer">Если вы не регистрировались на нашем сервисе, просто проигнорируйте это письмо.</p>
 </div>
 </body>

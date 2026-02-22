@@ -21,6 +21,8 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
 
+      UI_URL: ${UI_URL}
+      
       DB_URL: jdbc:postgresql://postgres-stsh:5432/${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}

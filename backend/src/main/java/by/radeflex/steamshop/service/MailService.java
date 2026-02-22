@@ -5,10 +5,12 @@ import by.radeflex.steamshop.entity.Payment;
 import by.radeflex.steamshop.props.MailProperties;
 import by.radeflex.steamshop.entity.EmailConfirmation;
 import by.radeflex.steamshop.entity.User;
+import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.EmailConfirmationRepository;
 import freemarker.template.Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class MailService {
     private final Configuration freemarkerConfig;
     private final EmailConfirmationRepository emailConfirmationRepository;
     private final MailProperties mailProperties;
+    private final ShopProperties shopProperties;
 
     @SneakyThrows
     private String getRegisterHtml(User user) {
@@ -43,6 +46,7 @@ public class MailService {
         Map<String, Object> object = new HashMap<>();
         object.put("username", user.getUsername());
         object.put("token", token);
+        object.put("url", shopProperties.getReturnUrl());
         freemarkerConfig.getTemplate("email-confirm.ftlh")
                 .process(object, writer);
         return writer.getBuffer().toString();
