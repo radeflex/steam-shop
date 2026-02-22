@@ -32,6 +32,7 @@ public class AccountService {
     private final PaymentItemRepository paymentItemRepository;
     private final ProductRepository productRepository;
     private final AccountMapper accountMapper;
+    private final CurrentUserService currentUserService;
 
     public boolean exists(Integer productId) {
         return accountRepository.existsByProductId(productId);
@@ -79,17 +80,19 @@ public class AccountService {
 
     @Transactional
     public Optional<AccountReadDto> create(AccountCreateDto accountCreateDto) {
+        var user = currentUserService.getCurrentUser();
         return productRepository.findById(accountCreateDto.productId())
-                .map(p -> accountMapper.mapFrom(accountCreateDto))
+                .map(p -> accountMapper.mapFrom(accountCreateDto, user))
                 .map(accountRepository::save)
                 .map(accountMapper::mapFrom);
     }
 
     public CsvResponseDto readCsv(MultipartFile file) {
+        var user = currentUserService.getCurrentUser();
         int inserted = 0;
         List<Integer> errorRows = new ArrayList<>();
         var accounts = CsvUtils.readAccounts(file, ';').stream()
-                .map(accountMapper::mapFrom).toList();
+                .map(a -> accountMapper.mapFrom(a, user)).toList();
         for (int i = 0; i < accounts.size(); ++i) {
             try {
                 accountRepository.save(accounts.get(i));

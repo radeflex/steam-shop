@@ -31,11 +31,11 @@ public class UserService implements UserDetailsService {
     private final ProductHistoryMapper productHistoryMapper;
     private final UserProductHistoryRepository userProductHistoryRepository;
     private final ImageService imageService;
-    private final AuthService authService;
+    private final CurrentUserService currentUserService;
 
     private void checkUnique(UserInfo dto) {
         List<String> existing = new ArrayList<>();
-        var user = authService.getCurrentUser();
+        var user = currentUserService.getCurrentUser();
         var byUsername = dto.username() == null ? Optional.empty()
                 : userRepository.findByUsername(dto.username());
         var byEmail = dto.email() == null ? Optional.empty()
@@ -54,7 +54,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public CurrentUserReadDto findCurrent() {
-        return userRepository.findById(authService.getCurrentUser().getId())
+        return userRepository.findById(currentUserService.getCurrentUser().getId())
                 .map(userMapper::mapCurrentFrom).orElseThrow();
     }
 
@@ -80,7 +80,7 @@ public class UserService implements UserDetailsService {
         checkUnique(userUpdateDto);
         var passwordHash = userUpdateDto.password() == null ?
                 null : passwordEncoder.encode(userUpdateDto.password());
-        return userRepository.findById(authService.getCurrentUser().getId())
+        return userRepository.findById(currentUserService.getCurrentUser().getId())
                 .map(u -> {
                     if (userUpdateDto.email() != null) u.setConfirmed(false);
                     return u;
@@ -92,7 +92,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void resetAvatar() {
-        var user = authService.getCurrentUser();
+        var user = currentUserService.getCurrentUser();
         if (user.getAvatarUrl() != null) {
             imageService.delete(user.getAvatarUrl());
             user.setAvatarUrl(null);
@@ -112,7 +112,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Page<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
-        var user = authService.getCurrentUser();
+        var user = currentUserService.getCurrentUser();
         return userProductHistoryRepository.findByUser(user, pageable)
                 .map(productHistoryMapper::mapFrom);
     }

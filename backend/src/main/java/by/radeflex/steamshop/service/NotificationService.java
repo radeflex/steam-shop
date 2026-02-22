@@ -24,11 +24,11 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationReadRepository notificationReadRepository;
     private final NotificationMapper notificationMapper;
-    private final AuthService authService;
+    private final CurrentUserService currentUserService;
 
     public Page<NotificationReadDto> findAll(Pageable pageable) {
         return notificationRepository.findAllByUserIdOrUserIdNull(
-                authService.getCurrentUser().getId(), pageable)
+                currentUserService.getCurrentUser().getId(), pageable)
                 .map(notificationMapper::mapFrom);
     }
 
@@ -39,7 +39,7 @@ public class NotificationService {
 
     public Page<NotificationReadDto> findUnread(Pageable pageable) {
         return notificationRepository.findAllUnread(
-                authService.getCurrentUser().getId(), pageable)
+                currentUserService.getCurrentUser().getId(), pageable)
                 .map(notificationMapper::mapFrom);
     }
 
@@ -72,7 +72,7 @@ public class NotificationService {
         return notificationRepository.findById(id)
                 .map(n -> {
                     var read = NotificationRead.builder()
-                            .user(authService.getCurrentUser())
+                            .user(currentUserService.getCurrentUser())
                             .notification(n)
                             .build();
                     notificationReadRepository.save(read);

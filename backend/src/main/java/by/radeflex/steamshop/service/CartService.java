@@ -19,11 +19,11 @@ public class CartService {
     private final ProductRepository productRepository;
     private final UserProductRepository userProductRepository;
     private final CartMapper cartMapper;
-    private final AuthService authService;
+    private final CurrentUserService currentUserService;
 
     @Transactional(readOnly = true)
     public Page<CartProductReadDto> findAll(Pageable pageable) {
-        return userProductRepository.findPageByUser(authService.getCurrentUser(), pageable)
+        return userProductRepository.findPageByUser(currentUserService.getCurrentUser(), pageable)
                 .map(cartMapper::mapFrom);
     }
 
@@ -31,7 +31,7 @@ public class CartService {
     public Optional<CartProductReadDto> add(Integer productId) {
         return productRepository.findById(productId)
                 .map(product -> {
-                    var user = authService.getCurrentUser();
+                    var user = currentUserService.getCurrentUser();
                     var userProduct = new UserProduct(null, user, product, 1);
                     userProductRepository.save(userProduct);
                     return userProduct;

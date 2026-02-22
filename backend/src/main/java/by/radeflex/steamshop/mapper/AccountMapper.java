@@ -5,23 +5,19 @@ import by.radeflex.steamshop.dto.AccountReadDto;
 import by.radeflex.steamshop.entity.Account;
 import by.radeflex.steamshop.entity.AccountStatus;
 import by.radeflex.steamshop.entity.Product;
-import by.radeflex.steamshop.service.AuthService;
-import lombok.RequiredArgsConstructor;
+import by.radeflex.steamshop.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class AccountMapper {
-    private final AuthService authService;
-
-    private Account buildAccount(Account account, AccountCreateDto accountCreateDto) {
+    private Account buildAccount(Account account, AccountCreateDto accountCreateDto, User cur) {
         account.setUsername(accountCreateDto.username());
         account.setPassword(accountCreateDto.password());
         account.setEmail(accountCreateDto.email());
         account.setEmailPassword(accountCreateDto.emailPassword());
         account.setStatus(AccountStatus.AVAILABLE);
         account.setProduct(Product.builder().id(accountCreateDto.productId()).build());
-        account.setCreatedBy(authService.getCurrentUser());
+        account.setCreatedBy(cur);
         return account;
     }
     public AccountReadDto mapFrom(Account account) {
@@ -34,7 +30,7 @@ public class AccountMapper {
                 .build();
     }
 
-    public Account mapFrom(AccountCreateDto dto) {
-        return buildAccount(new Account(), dto);
+    public Account mapFrom(AccountCreateDto dto, User cur) {
+        return buildAccount(new Account(), dto, cur);
     }
 }

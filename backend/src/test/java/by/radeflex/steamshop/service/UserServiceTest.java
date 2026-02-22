@@ -31,7 +31,7 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private AuthService authService;
+    private CurrentUserService currentUserService;
     @Mock
     private ImageService imageService;
     @Mock
@@ -49,7 +49,7 @@ public class UserServiceTest {
                 null,
                 null,
                 imageService,
-                authService
+                currentUserService
         );
     }
 
@@ -125,7 +125,7 @@ public class UserServiceTest {
                 .role(UserRole.USER.toString())
                 .build();
 
-        when(authService.getCurrentUser()).thenReturn(old);
+        when(currentUserService.getCurrentUser()).thenReturn(old);
         when(userRepository.saveAndFlush(now)).thenReturn(now);
         when(userRepository.findById(CURRENT_ID)).thenReturn(Optional.of(old));
         when(imageService.upload(AVATAR)).thenReturn(newAvatarUrl);
