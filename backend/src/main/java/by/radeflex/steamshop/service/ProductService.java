@@ -72,8 +72,8 @@ public class ProductService {
         checkUnique(dto);
         return Optional.of(dto)
                 .map(productMapper::mapFrom)
-                .map(productRepository::save)
                 .map(p -> uploadImage(file, p))
+                .map(productRepository::save)
                 .map(productMapper::mapFrom)
                 .orElseThrow();
     }

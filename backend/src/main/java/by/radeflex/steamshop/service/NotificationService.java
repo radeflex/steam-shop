@@ -70,6 +70,7 @@ public class NotificationService {
     @Transactional
     public boolean read(Integer id) {
         return notificationRepository.findById(id)
+                .filter(n -> !notificationReadRepository.existsByNotification(n))
                 .map(n -> {
                     var read = NotificationRead.builder()
                             .user(currentUserService.getCurrentUser())

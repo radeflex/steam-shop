@@ -19,7 +19,6 @@ public class UserMapper {
         User user = new User();
         buildUser(user, dto);
         user.setRole(UserRole.USER);
-        user.setAvatarUrl("no-avatar");
         return user;
     }
 
@@ -46,7 +45,9 @@ public class UserMapper {
                 .points(user.getPoints())
                 .createdAt(user.getCreatedAt())
                 .role(user.getRole().name())
-                .avatarUrl(user.getAvatarUrl())
+                .avatarUrl(user.getAvatarUrl() == null
+                                ? "no-image"
+                                : user.getAvatarUrl())
                 .confirmed(user.getConfirmed())
                 .build();
     }

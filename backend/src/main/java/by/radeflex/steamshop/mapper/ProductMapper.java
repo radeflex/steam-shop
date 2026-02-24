@@ -30,7 +30,9 @@ public class ProductMapper {
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .price(product.getPrice())
-                .previewUrl(product.getPreviewUrl())
+                .previewUrl(product.getPreviewUrl() == null
+                        ? "no-image"
+                        : product.getPreviewUrl())
                 .build();
     }
 }

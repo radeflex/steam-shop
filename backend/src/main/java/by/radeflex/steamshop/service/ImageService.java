@@ -40,12 +40,11 @@ public class ImageService {
 
     public Optional<byte[]> get(String key) {
         try {
-            if ("no-avatar".equals(key)) {
+            if ("no-image".equals(key))
                 return loadDefaultAvatar();
-            }
             return loadFromS3(key);
         } catch (Exception e) {
-            log.error("Failed to log image: {}", key, e);
+            log.error("Failed to load image: {}", key, e);
             return Optional.empty();
         }
     }
@@ -68,7 +67,7 @@ public class ImageService {
     }
 
     public void delete(String key) {
-        if (key.equals("no-avatar")) return;
+        if ("no-image".equals(key)) return;
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
