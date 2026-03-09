@@ -9,16 +9,21 @@ import org.springframework.stereotype.Service;
 public class CurrentUserService {
     public User getCurrentUserEntity() {
         var auth = getAuth();
+        if (auth == null) return null;
         return User.builder().id(auth.id()).role(auth.role()).build();
     }
 
     public Integer getCurrentUserId() {
-        return getAuth().id();
+        var auth = getAuth();
+        if (auth == null) return null;
+        return auth.id();
     }
 
     private AuthDto getAuth() {
         var principal = SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
-        return (AuthDto) principal;
+        if (principal instanceof AuthDto)
+            return (AuthDto) principal;
+        return null;
     }
 }
