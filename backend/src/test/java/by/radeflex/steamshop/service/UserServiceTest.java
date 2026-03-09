@@ -125,7 +125,7 @@ public class UserServiceTest {
                 .role(UserRole.USER.toString())
                 .build();
 
-        when(currentUserService.getCurrentUser()).thenReturn(old);
+        when(currentUserService.getCurrentUserEntity()).thenReturn(old);
         when(userRepository.saveAndFlush(now)).thenReturn(now);
         when(userRepository.findById(CURRENT_ID)).thenReturn(Optional.of(old));
         when(imageService.upload(AVATAR)).thenReturn(newAvatarUrl);

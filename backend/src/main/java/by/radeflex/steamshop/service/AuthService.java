@@ -1,5 +1,6 @@
 package by.radeflex.steamshop.service;
 
+import by.radeflex.steamshop.dto.AuthDto;
 import by.radeflex.steamshop.dto.JwtResponse;
 import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateDto;
@@ -19,7 +20,7 @@ public class AuthService {
 
     public JwtResponse register(UserCreateDto userCreateDto) {
         var user = userService.create(userCreateDto);
-        var token = jwtService.generateToken(user);
+        var token = jwtService.generateToken(new AuthDto(user.getId(), user.getRole()));
         mailService.sendRegistration(user);
         return new JwtResponse(token);
     }
@@ -29,7 +30,8 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(
                         loginDto.username(),
                         loginDto.password()));
-        var token = jwtService.generateToken((User) auth.getPrincipal());
+        User pr = (User) auth.getPrincipal();
+        var token = jwtService.generateToken(new AuthDto(pr.getId(), pr.getRole()));
         return new JwtResponse(token);
     }
 }

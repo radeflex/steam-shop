@@ -1,4 +1,14 @@
 services:
+  redis:
+    container_name: redis-stsh
+    image: redis:8.2.5-alpine
+    volumes:
+      - redis:/data/redis
+    networks:
+      - spring
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
   postgres:
     container_name: postgres-stsh
     image: postgres:18-alpine
@@ -39,6 +49,7 @@ services:
     networks:
       - spring
     depends_on:
+      - redis
       - postgres
   stsh-ui:
     container_name: stsh-ui
@@ -55,4 +66,6 @@ networks:
     driver: bridge
 volumes:
   postgres:
+    driver: local
+  redis:
     driver: local

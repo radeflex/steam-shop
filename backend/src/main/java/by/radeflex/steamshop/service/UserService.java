@@ -11,6 +11,9 @@ import by.radeflex.steamshop.mapper.UserMapper;
 import by.radeflex.steamshop.repository.UserProductHistoryRepository;
 import by.radeflex.steamshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,7 +38,7 @@ public class UserService implements UserDetailsService {
 
     private void checkUnique(UserInfo dto) {
         List<String> existing = new ArrayList<>();
-        var user = currentUserService.getCurrentUser();
+        var user = currentUserService.getCurrentUserEntity();
         var byUsername = dto.username() == null ? Optional.empty()
                 : userRepository.findByUsername(dto.username());
         var byEmail = dto.email() == null ? Optional.empty()
@@ -53,9 +56,12 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "user:current", key = "@currentUserService.getCurrentUserId()")
+    @SneakyThrows
     public CurrentUserReadDto findCurrent() {
-        return userRepository.findById(currentUserService.getCurrentUser().getId())
-                .map(userMapper::mapCurrentFrom).orElseThrow();
+        return userRepository.findById(currentUserService.getCurrentUserEntity().getId())
+                .map(userMapper::mapCurrentFrom)
+                .orElseThrow();
     }
 
     @Transactional(readOnly = true)
@@ -75,12 +81,15 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    @CacheEvict(value = "user:current",
+            key = "#result.get().id()",
+            condition = "#result.isPresent()")
     public Optional<CurrentUserReadDto> update(UserUpdateDto userUpdateDto,
                                                MultipartFile image) {
         checkUnique(userUpdateDto);
         var passwordHash = userUpdateDto.password() == null ?
                 null : passwordEncoder.encode(userUpdateDto.password());
-        return userRepository.findById(currentUserService.getCurrentUser().getId())
+        return userRepository.findById(currentUserService.getCurrentUserEntity().getId())
                 .map(u -> {
                     if (userUpdateDto.email() != null) u.setConfirmed(false);
                     return u;
@@ -92,7 +101,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void resetAvatar() {
-        var user = currentUserService.getCurrentUser();
+        var user = currentUserService.getCurrentUserEntity();
         if (user.getAvatarUrl() != null) {
             imageService.delete(user.getAvatarUrl());
             user.setAvatarUrl(null);
@@ -112,7 +121,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Page<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
-        var user = currentUserService.getCurrentUser();
+        var user = currentUserService.getCurrentUserEntity();
         return userProductHistoryRepository.findByUser(user, pageable)
                 .map(productHistoryMapper::mapFrom);
     }

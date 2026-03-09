@@ -50,7 +50,7 @@ public class PaymentService {
 
     @SneakyThrows
     public String topUp(TopUpDto topUpDto) {
-        User user = userRepository.findById(currentUserService.getCurrentUser().getId())
+        User user = userRepository.findById(currentUserService.getCurrentUserEntity().getId())
                 .orElseThrow();
         int sum = topUpDto.amount();
         var up = UserProduct.builder()
@@ -121,7 +121,7 @@ public class PaymentService {
     }
 
     public boolean purchaseCartViaBalance() {
-        var user = userRepository.findById(currentUserService.getCurrentUser().getId()).orElseThrow();
+        var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
         var cart = userProductRepository.findAllByUser(user);
 
         Double sum = cart.stream()
@@ -150,7 +150,7 @@ public class PaymentService {
 
     @SneakyThrows
     public String purchaseCartViaCard() {
-        var user = userRepository.findById(currentUserService.getCurrentUser().getId()).orElseThrow();
+        var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
         var cart = userProductRepository.findAllByUser(user);
         Double sum = cart.stream()
                 .mapToDouble(up -> up.getProduct().getPrice() * up.getQuantity())
@@ -217,7 +217,7 @@ public class PaymentService {
     }
 
     public boolean purchaseViaBalance(Integer productId) {
-        var u = userRepository.findById(currentUserService.getCurrentUser().getId()).orElseThrow();
+        var u = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
         var p = productRepository.findById(productId);
         if (p.isEmpty() || !u.withdraw(p.get().getPrice()))
             return false;
@@ -240,7 +240,7 @@ public class PaymentService {
 
     @SneakyThrows
     public Optional<String> purchaseViaCard(Integer productId) {
-        var u = currentUserService.getCurrentUser();
+        var u = currentUserService.getCurrentUserEntity();
         var p = productRepository.findById(productId);
         if (p.isEmpty())
             return Optional.empty();

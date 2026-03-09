@@ -2,9 +2,12 @@ package by.radeflex.steamshop.configuration;
 
 import by.radeflex.steamshop.http.filter.JwtFilter;
 import by.radeflex.steamshop.props.JwtProperties;
+import by.radeflex.steamshop.service.CurrentUserService;
+import by.radeflex.steamshop.service.JwtService;
 import by.radeflex.steamshop.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,6 +28,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -33,11 +37,12 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtProperties jwtProperties;
     private final JwtFilter jwtFilter;
+    private final CacheManager cacheManager;
     @Value("${cors.allowed-origins}")
     List<String> allowedOrigins;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserService userService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserService userService, JwtService jwtService) throws Exception {
         return http
                 .csrf(CsrfConfigurer::disable)
                 .cors(Customizer.withDefaults())
@@ -52,7 +57,15 @@ public class SecurityConfig {
                                 .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider(userService))
                 .logout(config -> config
-                        .deleteCookies(jwtProperties.getCookieName()))
+                        .logoutSuccessHandler((req, res, auth) -> {
+                            Arrays.stream(req.getCookies())
+                                    .filter(c -> c.getName().equals(jwtProperties.getCookieName()))
+                                    .findFirst()
+                                    .ifPresent(c -> {
+                                        var dto = jwtService.getAuth(c.getValue());
+                                        cacheManager.getCache("auth").evict(dto.id());
+                                    });
+                        }).deleteCookies(jwtProperties.getCookieName()))
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

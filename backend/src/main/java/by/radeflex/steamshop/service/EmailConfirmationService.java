@@ -29,7 +29,7 @@ public class EmailConfirmationService {
     }
 
     public boolean sendEmailConfirmation() {
-        return userRepository.findById(currentUserService.getCurrentUser().getId())
+        return userRepository.findById(currentUserService.getCurrentUserEntity().getId())
                 .filter(u -> !u.getConfirmed())
                 .map(u -> {
                     mailService.sendRegistration(u);

@@ -23,7 +23,7 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public Page<CartProductReadDto> findAll(Pageable pageable) {
-        return userProductRepository.findPageByUser(currentUserService.getCurrentUser(), pageable)
+        return userProductRepository.findPageByUser(currentUserService.getCurrentUserEntity(), pageable)
                 .map(cartMapper::mapFrom);
     }
 
@@ -31,7 +31,7 @@ public class CartService {
     public Optional<CartProductReadDto> add(Integer productId) {
         return productRepository.findById(productId)
                 .map(product -> {
-                    var user = currentUserService.getCurrentUser();
+                    var user = currentUserService.getCurrentUserEntity();
                     var userProduct = new UserProduct(null, user, product, 1);
                     userProductRepository.save(userProduct);
                     return userProduct;

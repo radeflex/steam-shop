@@ -80,7 +80,7 @@ public class AccountService {
 
     @Transactional
     public Optional<AccountReadDto> create(AccountCreateDto accountCreateDto) {
-        var user = currentUserService.getCurrentUser();
+        var user = currentUserService.getCurrentUserEntity();
         return productRepository.findById(accountCreateDto.productId())
                 .map(p -> accountMapper.mapFrom(accountCreateDto, user))
                 .map(accountRepository::save)
@@ -88,7 +88,7 @@ public class AccountService {
     }
 
     public CsvResponseDto readCsv(MultipartFile file) {
-        var user = currentUserService.getCurrentUser();
+        var user = currentUserService.getCurrentUserEntity();
         int inserted = 0;
         List<Integer> errorRows = new ArrayList<>();
         var accounts = CsvUtils.readAccounts(file, ';').stream()

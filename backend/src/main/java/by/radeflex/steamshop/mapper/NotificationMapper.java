@@ -57,7 +57,7 @@ public class NotificationMapper {
                 .title(dto.title())
                 .text(dto.text())
                 .type(NotificationType.INFO)
-                .createdBy(currentUserService.getCurrentUser())
+                .createdBy(currentUserService.getCurrentUserEntity())
                 .user(user)
                 .build();
     }
