@@ -18,4 +18,5 @@ public class MailProperties {
     private String password;
     private Properties properties;
     private int expirationDays;
+    private int cooldownSeconds;
 }

@@ -1,5 +1,7 @@
 package by.radeflex.steamshop.http.handler;
 
+import by.radeflex.steamshop.dto.CooldownResponse;
+import by.radeflex.steamshop.exception.EmailCooldownException;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.exception.ValidationError;
 import org.springframework.http.ResponseEntity;
@@ -18,5 +20,9 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ObjectExistsException.class)
     public ResponseEntity<?> handleExistsException(ObjectExistsException ex) {
         return ResponseEntity.badRequest().body(Map.of("errors", ex.getErrors()));
+    }
+    @ExceptionHandler(EmailCooldownException.class)
+    public ResponseEntity<?> handleEmailCooldown(EmailCooldownException ex) {
+        return ResponseEntity.status(429).body(new CooldownResponse("cooldown", ex.getSecondsLeft()));
     }
 }

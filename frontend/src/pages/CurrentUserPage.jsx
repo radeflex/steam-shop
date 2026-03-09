@@ -41,9 +41,22 @@ export default function CurrentUserPage() {
       toast.info("📩 Ссылка для подтверждения email отправлена на вашу почту", {
         autoClose: 3000,
       });
+
     } catch (err) {
+      if (err?.response?.data?.error === "cooldown") {
+        const seconds = err.response.data.secondsLeft;
+
+        toast.warning(
+            `⏳ Повторная отправка будет доступна через ${seconds} сек.`,
+            { autoClose: 3000 }
+        );
+
+        return;
+      }
+
       toast.error("❌ Не удалось отправить письмо. Попробуйте позже.");
       console.error(err);
+
     } finally {
       setSending(false);
     }
