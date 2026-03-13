@@ -23,15 +23,12 @@ export default function ProductCard({ product }) {
     try {
       setBuyLoading(true);
 
-      // выбор эндпоинта
       const res =
         type === "BALANCE"
           ? await purchaseViaBalance(product.id)
           : await purchaseViaCard(product.id);
 
       setShowPaymentModal(false);
-
-      // если бэк возвращает ссылку на оплату
       if (res?.data?.url) {
         window.location.href = res.data.url;
       } else {
@@ -40,18 +37,8 @@ export default function ProductCard({ product }) {
     } catch (err) {
       const status = err?.response?.status;
       const data = err?.response?.data;
-
-      // обработка 400 с errors
-      if (status === 400 && data?.errors) {
-        const errors = Array.isArray(data.errors)
-          ? data.errors
-          : Object.values(data.errors).flat();
-
-        if (errors.length > 0) {
-          errors.forEach((e) => toast.error(`❌ ${e}`));
-        } else {
-          toast.error("❌ Ошибка валидации");
-        }
+      if (status === 409 && data?.error) {
+        toast.error(`❌ ${data.error}`);
         return;
       }
 

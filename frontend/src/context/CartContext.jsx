@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { getCart, addToCart, updateQuantity } from "../api/cart.api";
+import { toast } from "react-toastify";
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
@@ -48,13 +49,27 @@ export const CartProvider = ({ children }) => {
 
     const existing = findByProductId(productId);
 
-    if (existing) {
-      await updateQuantity(existing.id, existing.quantity + 1);
-    } else {
-      await addToCart(productId);
-    }
+    try {
+      if (existing) {
+        await updateQuantity(existing.id, existing.quantity + 1);
+      } else {
+        await addToCart(productId);
+      }
 
-    await refreshCart();
+      await refreshCart();
+    } catch (err) {
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+
+      // Обработка только 409
+      if (status === 409 && data?.error) {
+        toast.error(`❌ ${data.error}`);
+        return;
+      }
+
+      console.error(err);
+      toast.error("❌ Ошибка при добавлении в корзину");
+    }
   };
 
   // 🧮 Количество товаров
