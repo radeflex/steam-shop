@@ -6,7 +6,7 @@ import java.util.Arrays;
 public enum PaymentStatus {
     PENDING,
     WAITING_FOR_CAPTURE,
-    CANCELLED,
+    CANCELED,
     SUCCEEDED;
 
     @JsonCreator

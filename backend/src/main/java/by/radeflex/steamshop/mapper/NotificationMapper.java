@@ -39,7 +39,7 @@ public class NotificationMapper {
     public Notification mapFrom(Notification n, Payment payment) {
         var url = payment.getConfirmationUrl();
         var text = switch (payment.getStatus()) {
-            case CANCELLED -> "Оплата отменена.";
+            case CANCELED -> "Оплата отменена.";
             case WAITING_FOR_CAPTURE, PENDING -> url;
             case SUCCEEDED -> "Успешно завершен.";
         };
