@@ -6,6 +6,7 @@ import by.radeflex.steamshop.props.MailProperties;
 import by.radeflex.steamshop.repository.EmailConfirmationRepository;
 import by.radeflex.steamshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,9 @@ public class EmailConfirmationService {
     private final StringRedisTemplate redisTemplate;
 
     @Transactional
+    @CacheEvict(value = "user:current",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result == true")
     public boolean confirmEmail(UUID token) {
         return emailConfirmationRepository.findByToken(token)
                 .map(ec -> {

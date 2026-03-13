@@ -21,6 +21,7 @@ import me.dynomake.yookassa.model.request.RefundRequest;
 import me.dynomake.yookassa.model.request.receipt.Receipt;
 import me.dynomake.yookassa.model.request.receipt.ReceiptCustomer;
 import me.dynomake.yookassa.model.request.receipt.ReceiptItem;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +51,7 @@ public class PaymentService {
 
     @SneakyThrows
     public String topUp(TopUpDto topUpDto) {
-        User user = userRepository.findById(currentUserService.getCurrentUserEntity().getId())
+        User user = userRepository.findById(currentUserService.getCurrentUserId())
                 .orElseThrow();
         int sum = topUpDto.amount();
         var up = UserProduct.builder()
@@ -67,30 +68,34 @@ public class PaymentService {
         return payment.getConfirmation().getConfirmationUrl();
     }
 
+    @CacheEvict(value = "user:current",
+            key = "#result.user.id",
+            condition = "#result != null")
     @SneakyThrows
-    public void handleNotification(PaymentStatusDto dto) {
+    public by.radeflex.steamshop.entity.Payment handleNotification(PaymentStatusDto dto) {
         var payment = paymentRepository.findById(dto.id());
         try {
-            payment.map(p -> {
+            return payment.map(p -> {
                 switch (p.getType()) {
                     case TOP_UP -> processTopUp(dto, p);
                     case PURCHASE -> processPurchase(dto, p);
                 }
                 if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
                     notificationService.sendPayment(p);
-                return true;
-            });
+                return p;
+            }).orElseThrow();
         } catch (AccountLackException e) {
             yookassa.createRefund(RefundRequest.builder()
                             .paymentId(dto.id())
                             .amount(new Amount(payment.get().getAmount()+"", "RUB"))
                     .build());
+            return null;
         }
     }
 
     private void processTopUp(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
         switch (dto.event()) {
-            case CANCELLED -> p.setStatus(PaymentStatus.CANCELLED);
+            case CANCELED -> p.setStatus(PaymentStatus.CANCELED);
             case SUCCEEDED -> {
                 p.getUser().topUp(p.getAmount().intValue());
                 p.setStatus(PaymentStatus.SUCCEEDED);
@@ -101,7 +106,7 @@ public class PaymentService {
 
     private void processPurchase(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
         switch (dto.event()) {
-            case CANCELLED -> accountService.unreserve(p);
+            case CANCELED -> accountService.unreserve(p);
             case SUCCEEDED -> {
                 var accounts = accountService.sellAccounts(p);
                 mailService.sendAccounts(p, accounts);
@@ -120,10 +125,13 @@ public class PaymentService {
                 .forEach(userProductHistoryRepository::save);
     }
 
+    @CacheEvict(value = "user:current",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result == true")
     public boolean purchaseCartViaBalance() {
-        var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
-        var cart = userProductRepository.findAllByUser(user);
-
+        var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
+        var cart = userProductRepository.findAvailableByUser(user);
+        if (cart.isEmpty()) throw new IllegalArgumentException();
         Double sum = cart.stream()
                 .mapToDouble(up -> up.getProduct().getPrice() * up.getQuantity())
                 .sum();
@@ -150,8 +158,9 @@ public class PaymentService {
 
     @SneakyThrows
     public String purchaseCartViaCard() {
-        var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
-        var cart = userProductRepository.findAllByUser(user);
+        var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
+        var cart = userProductRepository.findAvailableByUser(user);
+        if (cart.isEmpty()) throw new IllegalArgumentException();
         Double sum = cart.stream()
                 .mapToDouble(up -> up.getProduct().getPrice() * up.getQuantity())
                 .sum();
@@ -217,7 +226,7 @@ public class PaymentService {
     }
 
     public boolean purchaseViaBalance(Integer productId) {
-        var u = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
+        var u = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var p = productRepository.findById(productId);
         if (p.isEmpty() || !u.withdraw(p.get().getPrice()))
             return false;
