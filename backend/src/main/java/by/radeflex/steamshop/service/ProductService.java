@@ -4,7 +4,6 @@ import by.radeflex.steamshop.dto.*;
 import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.exception.ObjectExistsException;
-import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.mapper.ProductMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
@@ -27,29 +26,8 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final ImageService imageService;
 
-    private void checkUnique(ProductInfo dto) {
-        List<String> existing = new ArrayList<>();
-        if (dto.title() != null
-                && productRepository.exists(QProduct.product.title.eq(dto.title())))
-            existing.add("title");
-        if (dto.description() != null
-                && productRepository.exists(QProduct.product.description.eq(dto.description())))
-            existing.add("description");
-        if (!existing.isEmpty())
-            throw new ObjectExistsException(existing);
-    }
-
     public Page<ProductReadDto> findAll(ProductFilter filter, Pageable pageable) {
-        var predicate = PredicateBuilder.builder()
-                .add(filter.title(), QProduct.product.title::containsIgnoreCase)
-                .add(filter.priceMin(), QProduct.product.price::goe)
-                .add(filter.priceMax(), QProduct.product.price::loe)
-                .buildAnd();
-        if (predicate == null) {
-            return productRepository.findAll(pageable)
-                    .map(productMapper::mapFrom);
-        }
-        return productRepository.findAll(predicate, pageable)
+        return productRepository.findAllAvailable(filter, pageable)
                 .map(productMapper::mapFrom);
     }
 
@@ -85,6 +63,7 @@ public class ProductService {
         return productRepository.findById(id)
                 .map(p -> uploadImage(file, p))
                 .map(p -> productMapper.mapFrom(p, dto))
+                .map(productRepository::saveAndFlush)
                 .map(productMapper::mapFrom);
     }
 
@@ -96,5 +75,18 @@ public class ProductService {
                     productRepository.delete(p);
                     return true;
                 }).orElse(false);
+    }
+
+
+    private void checkUnique(ProductInfo dto) {
+        List<String> existing = new ArrayList<>();
+        if (dto.title() != null
+                && productRepository.exists(QProduct.product.title.eq(dto.title())))
+            existing.add("title");
+        if (dto.description() != null
+                && productRepository.exists(QProduct.product.description.eq(dto.description())))
+            existing.add("description");
+        if (!existing.isEmpty())
+            throw new ObjectExistsException(existing);
     }
 }

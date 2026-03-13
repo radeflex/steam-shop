@@ -2,6 +2,7 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.CartProductReadDto;
 import by.radeflex.steamshop.entity.UserProduct;
+import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.mapper.CartMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
@@ -21,6 +22,11 @@ public class CartService {
     private final CartMapper cartMapper;
     private final CurrentUserService currentUserService;
 
+    private void checkEnoughAccounts(UserProduct up) {
+        if (!userProductRepository.hasEnoughAccounts(up.getProduct(), up.getQuantity()))
+            throw new AccountLackException();
+    }
+
     @Transactional(readOnly = true)
     public Page<CartProductReadDto> findAll(Pageable pageable) {
         return userProductRepository.findPageByUser(currentUserService.getCurrentUserEntity(), pageable)
@@ -33,6 +39,7 @@ public class CartService {
                 .map(product -> {
                     var user = currentUserService.getCurrentUserEntity();
                     var userProduct = new UserProduct(null, user, product, 1);
+                    checkEnoughAccounts(userProduct);
                     userProductRepository.save(userProduct);
                     return userProduct;
                 }).map(cartMapper::mapFrom);
@@ -52,6 +59,7 @@ public class CartService {
         return userProductRepository.findById(userProductId)
                 .map(up -> {
                     up.setQuantity(quantity);
+                    checkEnoughAccounts(up);
                     userProductRepository.saveAndFlush(up);
                     return up;
                 }).map(cartMapper::mapFrom);

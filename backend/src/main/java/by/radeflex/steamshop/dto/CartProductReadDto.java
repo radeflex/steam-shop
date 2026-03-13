@@ -10,6 +10,7 @@ public record CartProductReadDto(
         String description,
         Integer price,
         String previewUrl,
-        Integer quantity
+        Integer quantity,
+        boolean isEnough
 ) {
 }

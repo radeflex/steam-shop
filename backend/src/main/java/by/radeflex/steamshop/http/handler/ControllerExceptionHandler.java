@@ -1,6 +1,7 @@
 package by.radeflex.steamshop.http.handler;
 
 import by.radeflex.steamshop.dto.CooldownResponse;
+import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.exception.EmailCooldownException;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.exception.ValidationError;
@@ -24,5 +25,9 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmailCooldownException.class)
     public ResponseEntity<?> handleEmailCooldown(EmailCooldownException ex) {
         return ResponseEntity.status(429).body(new CooldownResponse("cooldown", ex.getSecondsLeft()));
+    }
+    @ExceptionHandler(AccountLackException.class)
+    public ResponseEntity<?> handleAccountLack() {
+        return ResponseEntity.status(409).body(Map.of("error", "Товар закончился!"));
     }
 }
