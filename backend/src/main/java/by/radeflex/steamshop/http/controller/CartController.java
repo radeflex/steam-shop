@@ -1,6 +1,5 @@
 package by.radeflex.steamshop.http.controller;
 
-import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.service.CartService;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +20,7 @@ public class CartController {
 
     @GetMapping
     public ResponseEntity<?> findAll(Pageable pageable) {
-        var page = cartService.findAll(pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(cartService.findAll(pageable));
     }
 
     @PostMapping("/{productId}")

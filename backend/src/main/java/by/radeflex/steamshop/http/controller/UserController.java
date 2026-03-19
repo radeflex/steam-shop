@@ -60,7 +60,6 @@ public class UserController {
 
     @GetMapping("/current/product-history")
     public ResponseEntity<?> getCurrentUserProductHistory(Pageable pageable) {
-        var page = userService.getProductHistoryCurrent(pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(userService.getProductHistoryCurrent(pageable));
     }
 }

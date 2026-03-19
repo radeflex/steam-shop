@@ -1,7 +1,6 @@
 package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.dto.NotificationCreateDto;
-import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.service.NotificationService;
 import by.radeflex.steamshop.utils.ValidationUtils;
 import jakarta.validation.Valid;
@@ -25,19 +24,16 @@ public class NotificationController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/admin")
     public ResponseEntity<?> findAllAdmin(Pageable pageable) {
-        var page = notificationService.findAllAdmin(pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(notificationService.findAllAdmin(pageable));
     }
     @GetMapping
     public ResponseEntity<?> findAll(Pageable pageable) {
-        var page = notificationService.findAll(pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(notificationService.findAll(pageable));
     }
 
     @GetMapping("/unread")
     public ResponseEntity<?> findUnread(Pageable pageable) {
-        var page = notificationService.findUnread(pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(notificationService.findUnread(pageable));
     }
 
     @PutMapping("{id}/read")

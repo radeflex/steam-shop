@@ -1,6 +1,5 @@
 package by.radeflex.steamshop.http.controller;
 
-import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.dto.ProductCreateDto;
 import by.radeflex.steamshop.dto.ProductUpdateDto;
 import by.radeflex.steamshop.filter.ProductFilter;
@@ -30,8 +29,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<?> findAll(ProductFilter filter, Pageable pageable) {
-        var page = productService.findAll(filter, pageable);
-        return ResponseEntity.ok(PageResponse.of(page));
+        return ResponseEntity.ok(productService.findAll(filter, pageable));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

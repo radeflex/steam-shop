@@ -1,13 +1,15 @@
 package by.radeflex.steamshop.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
-@Value
+@Data
 @AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
 public class PageResponse<T> {
     List<T> content;
     Meta meta;

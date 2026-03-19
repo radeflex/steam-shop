@@ -3,7 +3,10 @@ package by.radeflex.steamshop.service;
 import by.radeflex.steamshop.dto.AccountCreateDto;
 import by.radeflex.steamshop.dto.AccountReadDto;
 import by.radeflex.steamshop.dto.CsvResponseDto;
-import by.radeflex.steamshop.entity.*;
+import by.radeflex.steamshop.entity.Account;
+import by.radeflex.steamshop.entity.AccountStatus;
+import by.radeflex.steamshop.entity.Payment;
+import by.radeflex.steamshop.entity.PaymentItem;
 import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.mapper.AccountMapper;
 import by.radeflex.steamshop.repository.AccountRepository;
@@ -11,6 +14,8 @@ import by.radeflex.steamshop.repository.PaymentItemRepository;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.utils.CsvUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
@@ -78,6 +83,15 @@ public class AccountService {
                 .collect(Collectors.groupingBy(a -> a.getProduct().getTitle()));
     }
 
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result.isPresent()"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result.isPresent()")})
     @Transactional
     public Optional<AccountReadDto> create(AccountCreateDto accountCreateDto) {
         var user = currentUserService.getCurrentUserEntity();
@@ -87,6 +101,16 @@ public class AccountService {
                 .map(accountMapper::mapFrom);
     }
 
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result != null"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result != null"
+            )})
     public CsvResponseDto readCsv(MultipartFile file) {
         var user = currentUserService.getCurrentUserEntity();
         int inserted = 0;

@@ -1,13 +1,15 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.CartProductReadDto;
+import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.entity.UserProduct;
 import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.mapper.CartMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +29,17 @@ public class CartService {
             throw new AccountLackException();
     }
 
+    @Cacheable(value = "cart", key = "@currentUserService.getCurrentUserId()")
     @Transactional(readOnly = true)
-    public Page<CartProductReadDto> findAll(Pageable pageable) {
-        return userProductRepository.findPageByUser(currentUserService.getCurrentUserEntity(), pageable)
-                .map(cartMapper::mapFrom);
+    public PageResponse<CartProductReadDto> findAll(Pageable pageable) {
+        return PageResponse.of(userProductRepository.findPageByUser(currentUserService.getCurrentUserEntity(), pageable)
+                .map(cartMapper::mapFrom));
     }
 
+    @CacheEvict(
+            value = "cart",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result.isPresent()")
     @Transactional
     public Optional<CartProductReadDto> add(Integer productId) {
         return productRepository.findById(productId)
@@ -46,6 +53,10 @@ public class CartService {
     }
 
     @Transactional
+    @CacheEvict(
+            value = "cart",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result == true")
     public boolean delete(Integer userProductId) {
         return userProductRepository.findById(userProductId)
                 .map(up -> {
@@ -55,6 +66,10 @@ public class CartService {
     }
 
     @Transactional
+    @CacheEvict(
+            value = "cart",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result.isPresent()")
     public Optional<CartProductReadDto> updateQuantity(Integer userProductId, Integer quantity) {
         return userProductRepository.findById(userProductId)
                 .map(up -> {

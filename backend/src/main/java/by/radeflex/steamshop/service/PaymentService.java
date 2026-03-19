@@ -22,6 +22,7 @@ import me.dynomake.yookassa.model.request.receipt.Receipt;
 import me.dynomake.yookassa.model.request.receipt.ReceiptCustomer;
 import me.dynomake.yookassa.model.request.receipt.ReceiptItem;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,9 +69,25 @@ public class PaymentService {
         return payment.getConfirmation().getConfirmationUrl();
     }
 
-    @CacheEvict(value = "user:current",
-            key = "#result.user.id",
-            condition = "#result != null")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "user::product-history",
+                    key = "#result.user.id",
+                    condition = "#result != null"),
+            @CacheEvict(
+                    value = "user::current",
+                    key = "#result.user.id",
+                    condition = "#result != null"),
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result != null"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result != null"
+            )
+    })
     @SneakyThrows
     public by.radeflex.steamshop.entity.Payment handleNotification(PaymentStatusDto dto) {
         var payment = paymentRepository.findById(dto.id());
@@ -125,9 +142,24 @@ public class PaymentService {
                 .forEach(userProductHistoryRepository::save);
     }
 
-    @CacheEvict(value = "user:current",
-            key = "@currentUserService.getCurrentUserId()",
-            condition = "#result == true")
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "user::current",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "user::product-history",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result"
+            )})
     public boolean purchaseCartViaBalance() {
         var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var cart = userProductRepository.findAvailableByUser(user);
@@ -156,6 +188,15 @@ public class PaymentService {
         return true;
     }
 
+    @Caching(evict = {
+            @CacheEvict(
+                value = "products",
+                allEntries = true,
+                condition = "#result != null"),
+            @CacheEvict(
+                value = "cart",
+                allEntries = true,
+                condition = "#result != null")})
     @SneakyThrows
     public String purchaseCartViaCard() {
         var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
@@ -225,6 +266,24 @@ public class PaymentService {
                 .build());
     }
 
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "user::current",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "user::product-history",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result"
+            )})
     public boolean purchaseViaBalance(Integer productId) {
         var u = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var p = productRepository.findById(productId);
@@ -247,6 +306,16 @@ public class PaymentService {
         return true;
     }
 
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "products",
+                    allEntries = true,
+                    condition = "#result.isPresent()"),
+            @CacheEvict(
+                    value = "cart",
+                    allEntries = true,
+                    condition = "#result.isPresent()"
+            )})
     @SneakyThrows
     public Optional<String> purchaseViaCard(Integer productId) {
         var u = currentUserService.getCurrentUserEntity();

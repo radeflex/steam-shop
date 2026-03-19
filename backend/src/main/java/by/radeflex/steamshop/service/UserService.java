@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +58,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "user:current", key = "@currentUserService.getCurrentUserId()")
+    @Cacheable(value = "user::current", key = "@currentUserService.getCurrentUserId()")
     @SneakyThrows
     public CurrentUserReadDto findCurrent() {
         return userRepository.findById(currentUserService.getCurrentUserEntity().getId())
@@ -81,7 +83,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    @CacheEvict(value = "user:current",
+    @CacheEvict(value = "user::current",
             key = "#result.get().id()",
             condition = "#result.isPresent()")
     public Optional<CurrentUserReadDto> update(UserUpdateDto userUpdateDto,
@@ -119,11 +121,12 @@ public class UserService implements UserDetailsService {
         return u;
     }
 
+    @Cacheable(value = "user::product-history", key = "@currentUserService.getCurrentUserId()")
     @Transactional(readOnly = true)
-    public Page<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
+    public PageResponse<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
         var user = currentUserService.getCurrentUserEntity();
-        return userProductHistoryRepository.findByUser(user, pageable)
-                .map(productHistoryMapper::mapFrom);
+        return PageResponse.of(userProductHistoryRepository.findByUser(user, pageable)
+                .map(productHistoryMapper::mapFrom));
     }
 
     @Override

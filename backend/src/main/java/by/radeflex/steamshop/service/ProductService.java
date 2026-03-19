@@ -8,7 +8,8 @@ import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.mapper.ProductMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +27,10 @@ public class ProductService {
     private final ProductMapper productMapper;
     private final ImageService imageService;
 
-    public Page<ProductReadDto> findAll(ProductFilter filter, Pageable pageable) {
-        return productRepository.findAllAvailable(filter, pageable)
-                .map(productMapper::mapFrom);
+    @Cacheable("products")
+    public PageResponse<ProductReadDto> findAll(ProductFilter filter, Pageable pageable) {
+        return PageResponse.of(productRepository.findAllAvailable(filter, pageable)
+                .map(productMapper::mapFrom));
     }
 
     public Optional<ProductReadDto> findById(Integer id) {
@@ -46,6 +48,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public ProductReadDto create(ProductCreateDto dto, MultipartFile file) {
         checkUnique(dto);
         return Optional.of(dto)
@@ -57,6 +60,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public Optional<ProductReadDto> update(Integer id, ProductUpdateDto dto,
                                            MultipartFile file) {
         checkUnique(dto);
@@ -68,6 +72,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public boolean delete(Integer id) {
         return productRepository.findById(id)
                 .map(p -> {

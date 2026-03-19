@@ -2,6 +2,7 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.NotificationCreateDto;
 import by.radeflex.steamshop.dto.NotificationReadDto;
+import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.entity.NotificationRead;
 import by.radeflex.steamshop.entity.Payment;
 import by.radeflex.steamshop.mapper.NotificationMapper;
@@ -9,7 +10,9 @@ import by.radeflex.steamshop.repository.NotificationReadRepository;
 import by.radeflex.steamshop.repository.NotificationRepository;
 import by.radeflex.steamshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,24 +29,36 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
     private final CurrentUserService currentUserService;
 
-    public Page<NotificationReadDto> findAll(Pageable pageable) {
-        return notificationRepository.findAllByUserIdOrUserIdNull(
+    @Cacheable(
+            value = "notifications::user",
+            key = "@currentUserService.getCurrentUserId()")
+    public PageResponse<NotificationReadDto> findAll(Pageable pageable) {
+        return PageResponse.of(notificationRepository.findAllByUserIdOrUserIdNull(
                 currentUserService.getCurrentUserEntity().getId(), pageable)
-                .map(notificationMapper::mapFrom);
+                .map(notificationMapper::mapFrom));
     }
 
-    public Page<NotificationReadDto> findAllAdmin(Pageable pageable) {
-        return notificationRepository.findAll(pageable)
-                .map(notificationMapper::mapFrom);
+    @Cacheable(value = "notifications")
+    public PageResponse<NotificationReadDto> findAllAdmin(Pageable pageable) {
+        return PageResponse.of(notificationRepository.findAll(pageable)
+                .map(notificationMapper::mapFrom));
     }
 
-    public Page<NotificationReadDto> findUnread(Pageable pageable) {
-        return notificationRepository.findAllUnread(
+    @Cacheable(
+            value = "notifications::user::unread",
+            key = "@currentUserService.getCurrentUserId()")
+    public PageResponse<NotificationReadDto> findUnread(Pageable pageable) {
+        return PageResponse.of(notificationRepository.findAllUnread(
                 currentUserService.getCurrentUserEntity().getId(), pageable)
-                .map(notificationMapper::mapFrom);
+                .map(notificationMapper::mapFrom));
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "notifications"),
+            @CacheEvict(value = "notifications::user", allEntries = true),
+            @CacheEvict(value = "notifications::user::unread", allEntries = true)
+    })
     public NotificationReadDto sendAll(NotificationCreateDto dto) {
         return Optional.of(notificationMapper.mapFrom(dto, null))
                 .map(notificationRepository::save)
@@ -52,28 +67,64 @@ public class NotificationService {
     }
 
     @Transactional
-    void sendPayment(Payment payment) {
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "notifications::user::unread",
+                    key = "#result.user.id",
+                    condition = "#result != null"),
+            @CacheEvict(
+                    value = "notifications::user",
+                    key = "#result.user.id",
+                    condition = "#result != null"),
+            @CacheEvict(value = "notifications", allEntries = true)
+    })
+    public Payment sendPayment(Payment payment) {
         notificationRepository.findByPaymentId(payment.getId())
                 .ifPresentOrElse(n -> {
                     notificationRepository.saveAndFlush(notificationMapper.mapFrom(n, payment));
                     notificationReadRepository.deleteByNotification(n);
                 }, () -> notificationRepository.saveAndFlush(notificationMapper.mapFrom(null, payment)));
+        return payment;
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(
+                    value = "notifications::user::unread",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result.isPresent()"
+            ),
+            @CacheEvict(
+                    value = "notifications::user",
+                    key = "@currentUserService.getCurrentUserId()",
+                    condition = "#result.isPresent()"
+            ),
+            @CacheEvict(
+                    value = "notifications",
+                    allEntries = true,
+                    condition = "#result.isPresent()"
+            )
+    })
     public Optional<NotificationReadDto> sendToUser(Integer userId, NotificationCreateDto dto) {
         return userRepository.findById(userId)
                 .map(u -> notificationMapper.mapFrom(dto, u))
                 .map(notificationRepository::save)
                 .map(notificationMapper::mapFrom);
     }
+
     @Transactional
+    @CacheEvict(
+            value = "notifications::user::unread",
+            key = "@currentUserService.getCurrentUserId()",
+            condition = "#result"
+    )
     public boolean read(Integer id) {
+        var u = currentUserService.getCurrentUserEntity();
         return notificationRepository.findById(id)
-                .filter(n -> !notificationReadRepository.existsByNotification(n))
+                .filter(n -> !notificationReadRepository.existsByNotificationAndUser(n, u))
                 .map(n -> {
                     var read = NotificationRead.builder()
-                            .user(currentUserService.getCurrentUserEntity())
+                            .user(u)
                             .notification(n)
                             .build();
                     notificationReadRepository.save(read);
