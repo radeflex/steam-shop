@@ -37,10 +37,9 @@ public interface UserProductRepository extends JpaRepository<UserProduct, Intege
     void deleteAllByUser(User user);
 
     @Query("""
-        select count(a) >= :quantity
+        select count(*) >= :quantity
         from Account a
         where a.status = 'AVAILABLE' and a.product = :product
-        group by a
     """)
     boolean hasEnoughAccounts(Product product, Integer quantity);
 }
