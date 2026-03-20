@@ -2,7 +2,7 @@ package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.dto.AccountCreateDto;
 import by.radeflex.steamshop.dto.PageResponse;
-import by.radeflex.steamshop.service.AccountService;
+import by.radeflex.steamshop.service.payment.AccountService;
 import by.radeflex.steamshop.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

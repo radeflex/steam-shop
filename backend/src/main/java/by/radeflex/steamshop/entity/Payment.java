@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Generated;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,7 +24,7 @@ public class Payment {
     private Integer orderId;
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private User user;
-    private Double amount;
+    private Integer amount;
     private String confirmationUrl;
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;

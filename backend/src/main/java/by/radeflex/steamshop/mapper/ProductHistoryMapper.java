@@ -12,6 +12,7 @@ public class ProductHistoryMapper {
                 .user(pi.getPayment().getUser())
                 .title(pi.getProduct().getTitle())
                 .price(pi.getProduct().getPrice())
+                .payment(pi.getPayment())
                 .quantity(pi.getQuantity())
                 .build();
     }

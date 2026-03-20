@@ -2,7 +2,9 @@ package by.radeflex.steamshop.http.controller;
 
 import by.radeflex.steamshop.dto.PaymentStatusDto;
 import by.radeflex.steamshop.dto.TopUpDto;
-import by.radeflex.steamshop.service.PaymentService;
+import by.radeflex.steamshop.service.payment.BalanceService;
+import by.radeflex.steamshop.service.payment.OrderService;
+import by.radeflex.steamshop.service.payment.PaymentService;
 import by.radeflex.steamshop.utils.ValidationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentController {
     private final PaymentService paymentService;
+    private final BalanceService balanceService;
+    private final OrderService orderService;
 
     @PostMapping("/status-webhook")
     public ResponseEntity<?> handleStatus(@RequestBody PaymentStatusDto dto) {
@@ -28,7 +32,7 @@ public class PaymentController {
 
     @PostMapping("/purchase-balance/{productId}")
     public ResponseEntity<?> purchaseViaBalance(@PathVariable Integer productId) {
-        if (!paymentService.purchaseViaBalance(productId)) {
+        if (!orderService.purchaseViaBalance(productId)) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok().build();
@@ -36,19 +40,19 @@ public class PaymentController {
 
     @PostMapping("/purchase-card/{productId}")
     public ResponseEntity<?> purchaseCartViaCard(@PathVariable Integer productId) {
-        var url = paymentService.purchaseViaCard(productId);
+        var url = orderService.purchaseViaCard(productId);
         return ResponseEntity.ok(Map.of("url", url));
     }
 
     @PostMapping("/purchase-card")
     public ResponseEntity<?> purchaseCartViaCard() {
-        var url = paymentService.purchaseCartViaCard();
+        var url = orderService.purchaseCartViaCard();
         return ResponseEntity.ok(Map.of("url", url));
     }
 
     @PostMapping("/purchase-balance")
     public ResponseEntity<?> purchaseCartViaBalance() {
-        if (!paymentService.purchaseCartViaBalance()) {
+        if (!orderService.purchaseCartViaBalance()) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok().build();
@@ -58,7 +62,7 @@ public class PaymentController {
     public ResponseEntity<?> topUpBalance(@RequestBody @Valid TopUpDto topUpDto,
                                           BindingResult bindingResult) {
         ValidationUtils.checkErrors(bindingResult);
-        String confirmationUrl = paymentService.topUp(topUpDto);
+        String confirmationUrl = balanceService.topUp(topUpDto);
         return ResponseEntity.ok(Map.of("url", confirmationUrl));
     }
 }
