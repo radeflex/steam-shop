@@ -25,9 +25,10 @@ public class EmailConfirmationService {
     private final StringRedisTemplate redisTemplate;
 
     @Transactional
-    @CacheEvict(value = "user:current",
+    @CacheEvict(
+            value = "user::current",
             key = "@currentUserService.getCurrentUserId()",
-            condition = "#result == true")
+            condition = "#result")
     public boolean confirmEmail(UUID token) {
         return emailConfirmationRepository.findByToken(token)
                 .map(ec -> {

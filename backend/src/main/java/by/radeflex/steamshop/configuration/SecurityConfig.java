@@ -64,6 +64,7 @@ public class SecurityConfig {
                                     .ifPresent(c -> {
                                         var dto = jwtService.getAuth(c.getValue());
                                         cacheManager.getCache("auth").evict(dto.id());
+                                        cacheManager.getCache("user::current").evict(dto.id());
                                     });
                         }).deleteCookies(jwtProperties.getCookieName()))
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
