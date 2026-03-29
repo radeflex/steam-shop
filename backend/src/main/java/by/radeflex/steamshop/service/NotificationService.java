@@ -3,8 +3,10 @@ package by.radeflex.steamshop.service;
 import by.radeflex.steamshop.dto.NotificationCreateDto;
 import by.radeflex.steamshop.dto.NotificationReadDto;
 import by.radeflex.steamshop.dto.PageResponse;
+import by.radeflex.steamshop.entity.Notification;
 import by.radeflex.steamshop.entity.NotificationRead;
 import by.radeflex.steamshop.entity.Payment;
+import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.mapper.NotificationMapper;
 import by.radeflex.steamshop.repository.NotificationReadRepository;
 import by.radeflex.steamshop.repository.NotificationRepository;
@@ -134,11 +136,18 @@ public class NotificationService {
 
     @Transactional
     public boolean delete(Integer id) {
+        var cur = currentUserService.getCurrentUserEntity();
         return notificationRepository.findById(id)
                 .map(n -> {
+                    checkOwner(n, cur);
                     notificationRepository.delete(n);
                     return true;
                 })
                 .orElse(false);
+    }
+
+    private static void checkOwner(Notification n, User cur) {
+        if (!cur.equals(n.getCreatedBy()) && !cur.equals(n.getUser()))
+            throw new IllegalStateException();
     }
 }
