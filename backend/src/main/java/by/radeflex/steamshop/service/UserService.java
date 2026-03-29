@@ -103,7 +103,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void resetAvatar() {
-        var user = currentUserService.getCurrentUserEntity();
+        var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
         if (user.getAvatarUrl() != null) {
             imageService.delete(user.getAvatarUrl());
             user.setAvatarUrl(null);
