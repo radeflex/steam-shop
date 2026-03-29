@@ -20,6 +20,8 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     }
     @ExceptionHandler(ObjectExistsException.class)
     public ResponseEntity<?> handleExistsException(ObjectExistsException ex) {
+        if (ex.getErrors().isEmpty())
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         return ResponseEntity.badRequest().body(Map.of("errors", ex.getErrors()));
     }
     @ExceptionHandler(EmailCooldownException.class)

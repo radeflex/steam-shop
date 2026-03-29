@@ -15,4 +15,7 @@ public class ObjectExistsException extends RuntimeException {
             errors.put(field, "уже существует");
         }
     }
+    public ObjectExistsException() {
+        super("Such object already exists");
+    }
 }

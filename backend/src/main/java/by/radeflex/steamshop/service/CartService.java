@@ -4,6 +4,7 @@ import by.radeflex.steamshop.dto.CartProductReadDto;
 import by.radeflex.steamshop.dto.PageResponse;
 import by.radeflex.steamshop.entity.UserProduct;
 import by.radeflex.steamshop.exception.AccountLackException;
+import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.mapper.CartMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
@@ -41,10 +42,12 @@ public class CartService {
             key = "@currentUserService.getCurrentUserId()",
             condition = "#result.isPresent()")
     @Transactional
-    public Optional<CartProductReadDto> add(Integer productId) {
+    public Optional<CartProductReadDto> create(Integer productId) {
         return productRepository.findById(productId)
                 .map(product -> {
                     var user = currentUserService.getCurrentUserEntity();
+                    if (userProductRepository.existsByUserAndProduct(user, product))
+                        throw new ObjectExistsException();
                     var userProduct = new UserProduct(null, user, product, 1);
                     checkEnoughAccounts(userProduct);
                     userProductRepository.save(userProduct);

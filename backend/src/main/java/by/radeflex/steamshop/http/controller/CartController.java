@@ -24,8 +24,8 @@ public class CartController {
     }
 
     @PostMapping("/{productId}")
-    public ResponseEntity<?> addToCart(@PathVariable Integer productId) {
-        var product = cartService.add(productId)
+    public ResponseEntity<?> create(@PathVariable Integer productId) {
+        var product = cartService.create(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         var uri = URI.create("/cart/" + product.id());
         return ResponseEntity.created(uri).body(product);

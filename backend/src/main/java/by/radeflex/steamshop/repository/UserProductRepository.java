@@ -42,4 +42,6 @@ public interface UserProductRepository extends JpaRepository<UserProduct, Intege
         where a.status = 'AVAILABLE' and a.product = :product
     """)
     boolean hasEnoughAccounts(Product product, Integer quantity);
+
+    boolean existsByUserAndProduct(User user, Product product);
 }
