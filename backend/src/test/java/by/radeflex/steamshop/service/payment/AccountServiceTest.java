@@ -7,7 +7,6 @@ import by.radeflex.steamshop.repository.AccountRepository;
 import by.radeflex.steamshop.repository.PaymentItemRepository;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.service.CurrentUserService;
-import by.radeflex.steamshop.service.payment.AccountService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

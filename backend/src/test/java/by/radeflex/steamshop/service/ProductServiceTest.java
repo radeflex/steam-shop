@@ -6,8 +6,6 @@ import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.mapper.ProductMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
-import by.radeflex.steamshop.service.ImageService;
-import by.radeflex.steamshop.service.ProductService;
 import com.querydsl.core.types.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

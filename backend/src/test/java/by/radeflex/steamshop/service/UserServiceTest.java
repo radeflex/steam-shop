@@ -1,4 +1,4 @@
-package by.radeflex.steamshop.unit.service;
+package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.UserCreateDto;
 import by.radeflex.steamshop.dto.UserUpdateDto;

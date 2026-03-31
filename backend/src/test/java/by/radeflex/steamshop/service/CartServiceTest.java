@@ -1,4 +1,4 @@
-package by.radeflex.steamshop.unit.service;
+package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.User;
