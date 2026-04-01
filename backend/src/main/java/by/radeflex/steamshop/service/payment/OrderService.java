@@ -10,7 +10,6 @@ import by.radeflex.steamshop.service.MailService;
 import by.radeflex.steamshop.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import me.dynomake.yookassa.model.Payment;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
@@ -79,10 +78,9 @@ public class OrderService {
         if (p.isEmpty())
             return Optional.empty();
         var up = List.of(new UserProduct(null, u, p.get(), 1));
-        Payment payment = paymentService.createYookassaPayment(p.get().getPrice(), up, u);
-        var ePayment = paymentService.createPaymentCartViaCard(payment, u, PaymentSource.CLICK, up);
+        var ePayment = paymentService.createPaymentViaCard(p.get().getPrice(), u, PaymentSource.CLICK, up);
         notificationService.sendPayment(ePayment);
-        return Optional.of(payment.getConfirmation().getConfirmationUrl());
+        return Optional.of(ePayment.getConfirmationUrl());
     }
 
     @Caching(evict = {
@@ -112,7 +110,6 @@ public class OrderService {
         if (!user.withdraw(sum)) {
             return false;
         }
-
         var ePayment = paymentService.createPaymentCartViaBalance(user, sum, cart);
         var accounts = accountService.sellAccounts(ePayment);
         notificationService.sendPayment(ePayment);
@@ -137,10 +134,8 @@ public class OrderService {
         if (cart.isEmpty()) throw new IllegalArgumentException();
         Integer sum = cart.stream().mapToInt(up ->
                 up.getProduct().getPrice() * up.getQuantity()).sum();
-
-        Payment payment = paymentService.createYookassaPayment(sum, cart, user);
-        var ePayment = paymentService.createPaymentCartViaCard(payment, user, PaymentSource.CART, cart);
+        var ePayment = paymentService.createPaymentViaCard(sum, user, PaymentSource.CART, cart);
         notificationService.sendPayment(ePayment);
-        return payment.getConfirmation().getConfirmationUrl();
+        return ePayment.getConfirmationUrl();
     }
 }

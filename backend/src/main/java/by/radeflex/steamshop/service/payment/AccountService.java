@@ -44,20 +44,20 @@ public class AccountService {
         return accountRepository.existsByProductId(productId);
     }
 
-    void reserve(Payment p) throws AccountLackException {
-        getAccounts(p, AccountStatus.AVAILABLE)
+    private void changeStatus(Payment p, AccountStatus f, AccountStatus t) {
+        getAccounts(p, f)
                 .forEach(a -> {
-                    a.setStatus(AccountStatus.RESERVED);
+                    a.setStatus(t);
                     accountRepository.save(a);
                 });
     }
 
+    void reserve(Payment p) throws AccountLackException {
+        changeStatus(p, AccountStatus.AVAILABLE, AccountStatus.RESERVED);
+    }
+
      void unreserve(Payment p) throws AccountLackException {
-        getAccounts(p, AccountStatus.RESERVED)
-                .forEach(a -> {
-                    a.setStatus(AccountStatus.AVAILABLE);
-                    accountRepository.save(a);
-                });
+        changeStatus(p, AccountStatus.RESERVED, AccountStatus.AVAILABLE);
     }
 
      private List<Account> getAccounts(Payment p, AccountStatus status)

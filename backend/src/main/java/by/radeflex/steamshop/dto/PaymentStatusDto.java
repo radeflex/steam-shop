@@ -8,6 +8,9 @@ public record PaymentStatusDto(
         PaymentStatus event,
         String url
 ) {
+    public PaymentStatusDto(UUID id, PaymentStatus event, String url) {
+        this(new PaymentObject(id), event, url);
+    }
     public UUID id() {return object.id();}
 }
 

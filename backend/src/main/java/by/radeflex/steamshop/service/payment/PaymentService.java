@@ -91,7 +91,17 @@ public class PaymentService {
         }
     }
 
-    by.radeflex.steamshop.entity.Payment createPaymentTopUp(Payment payment, User user) {
+    @SneakyThrows
+    by.radeflex.steamshop.entity.Payment createPaymentTopUp(Integer amount, User user) {
+        var up = UserProduct.builder()
+                .user(user)
+                .product(Product.builder()
+                        .title("Пополнение "+user.getUsername())
+                        .price(amount)
+                        .build())
+                .quantity(1)
+                .build();
+        var payment = createYookassaPayment(amount, List.of(up), user);
         return savePayment(payment, user, PaymentType.TOP_UP, null);
     }
 
@@ -124,7 +134,9 @@ public class PaymentService {
         return ePayment;
     }
 
-    by.radeflex.steamshop.entity.Payment createPaymentCartViaCard(Payment payment, User user, PaymentSource source, List<UserProduct> cart) {
+    @SneakyThrows
+    by.radeflex.steamshop.entity.Payment createPaymentViaCard(Integer sum, User user, PaymentSource source, List<UserProduct> cart) {
+        var payment = createYookassaPayment(sum, cart, user);
         var ePayment = savePayment(payment, user, PaymentType.PURCHASE, source);
         savePaymentItems(cart, ePayment);
         return ePayment;
@@ -156,7 +168,7 @@ public class PaymentService {
         paymentRepository.save(p);
     }
 
-    Payment createYookassaPayment(Integer sum, List<UserProduct> cart, User user) throws UnspecifiedShopInformation, BadRequestException, IOException {
+    private Payment createYookassaPayment(Integer sum, List<UserProduct> cart, User user) throws UnspecifiedShopInformation, BadRequestException, IOException {
         return yookassa.createPayment(PaymentRequest.builder()
                 .amount(new Amount(sum + ".00", "RUB"))
                 .description("Покупка " + cart.size() + " товаров на 812shop.org")
