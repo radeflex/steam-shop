@@ -85,7 +85,7 @@ public class PaymentService {
         } catch (AccountLackException e) {
             yookassa.createRefund(RefundRequest.builder()
                             .paymentId(dto.id())
-                            .amount(new Amount(payment.get().getAmount()+"", "RUB"))
+                            .amount(new Amount((double)payment.get().getAmount()+"", "RUB"))
                     .build());
             return null;
         }
