@@ -1,9 +1,13 @@
 package by.radeflex.steamshop.http.controller;
 
-import by.radeflex.steamshop.props.JwtProperties;
 import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateDto;
+import by.radeflex.steamshop.dto.response.JwtResponse;
+import by.radeflex.steamshop.props.JwtProperties;
 import by.radeflex.steamshop.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -18,6 +22,7 @@ import static by.radeflex.steamshop.utils.ValidationUtils.checkErrors;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Auth API", description = "API для регистрации и входа в систему")
 public class AuthController {
     private final JwtProperties jwtProperties;
     private final AuthService authService;
@@ -30,18 +35,28 @@ public class AuthController {
         response.addCookie(cookie);
     }
 
+    @Operation(
+            summary = "Регистрация нового пользователя",
+            description = "Создаёт нового пользователя, возвращает JWT-токен и устанавливает cookie")
+    @ApiResponse(responseCode = "200", description = "Пользователь успешно зарегистрирован")
+    @ApiResponse(responseCode = "400", description = "Ошибка валидации данных")
     @PostMapping("/register")
-    public ResponseEntity<?> register(HttpServletResponse resp,
-                                      @RequestBody @Valid UserCreateDto userCreateDto,
-                                      BindingResult bindingResult) {
+    public ResponseEntity<JwtResponse> register(HttpServletResponse resp,
+                                                @RequestBody @Valid UserCreateDto userCreateDto,
+                                                BindingResult bindingResult) {
         checkErrors(bindingResult);
         var jwtResponse = authService.register(userCreateDto);
         addCookie(jwtResponse.token(), resp);
         return ResponseEntity.ok(jwtResponse);
     }
 
+    @Operation(
+            summary = "Вход в систему",
+            description = "Аутентифицирует пользователя по логину и паролю, возвращает JWT-токен и устанавливает cookie")
+    @ApiResponse(responseCode = "200", description = "Успешный вход")
+    @ApiResponse(responseCode = "401", description = "Неверные учётные данные")
     @PostMapping("/login")
-    public ResponseEntity<?> login(HttpServletResponse resp,
+    public ResponseEntity<JwtResponse> login(HttpServletResponse resp,
                                    @RequestBody LoginDto loginDto) {
         var jwtResponse = authService.login(loginDto);
         addCookie(jwtResponse.token(), resp);

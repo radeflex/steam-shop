@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.AuthDto;
-import by.radeflex.steamshop.dto.JwtResponse;
+import by.radeflex.steamshop.dto.response.JwtResponse;
 import by.radeflex.steamshop.dto.LoginDto;
 import by.radeflex.steamshop.dto.UserCreateDto;
 import by.radeflex.steamshop.entity.User;

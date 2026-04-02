@@ -1,7 +1,7 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.CartProductReadDto;
-import by.radeflex.steamshop.dto.PageResponse;
+import by.radeflex.steamshop.dto.response.PageResponse;
 import by.radeflex.steamshop.entity.UserProduct;
 import by.radeflex.steamshop.exception.AccountLackException;
 import by.radeflex.steamshop.exception.ObjectExistsException;

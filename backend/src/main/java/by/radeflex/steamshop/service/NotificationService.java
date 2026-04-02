@@ -2,7 +2,7 @@ package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.NotificationCreateDto;
 import by.radeflex.steamshop.dto.NotificationReadDto;
-import by.radeflex.steamshop.dto.PageResponse;
+import by.radeflex.steamshop.dto.response.PageResponse;
 import by.radeflex.steamshop.entity.Notification;
 import by.radeflex.steamshop.entity.NotificationRead;
 import by.radeflex.steamshop.entity.Payment;

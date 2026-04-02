@@ -2,7 +2,7 @@ package by.radeflex.steamshop.service.payment;
 
 import by.radeflex.steamshop.dto.AccountCreateDto;
 import by.radeflex.steamshop.dto.AccountReadDto;
-import by.radeflex.steamshop.dto.CsvResponseDto;
+import by.radeflex.steamshop.dto.response.CsvResponse;
 import by.radeflex.steamshop.entity.Account;
 import by.radeflex.steamshop.entity.AccountStatus;
 import by.radeflex.steamshop.entity.Payment;
@@ -112,7 +112,7 @@ public class AccountService {
                     allEntries = true,
                     condition = "#result != null"
             )})
-    public CsvResponseDto readCsv(MultipartFile file) {
+    public CsvResponse readCsv(MultipartFile file) {
         var user = currentUserService.getCurrentUserEntity();
         int inserted = 0;
         List<Integer> errorRows = new ArrayList<>();
@@ -126,7 +126,7 @@ public class AccountService {
                 errorRows.add(i + 1);
             }
         }
-        return new CsvResponseDto(accounts.size(), inserted, errorRows);
+        return new CsvResponse(accounts.size(), inserted, errorRows);
     }
 
     @Transactional(readOnly = true)

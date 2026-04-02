@@ -1,6 +1,7 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.*;
+import by.radeflex.steamshop.dto.response.PageResponse;
 import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.QProduct;
 import by.radeflex.steamshop.exception.ObjectExistsException;
