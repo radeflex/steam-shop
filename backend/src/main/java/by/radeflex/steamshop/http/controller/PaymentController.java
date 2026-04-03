@@ -3,17 +3,21 @@ package by.radeflex.steamshop.http.controller;
 import by.radeflex.steamshop.dto.PaymentStatusDto;
 import by.radeflex.steamshop.dto.TopUpDto;
 import by.radeflex.steamshop.dto.response.ConfirmationUrlResponse;
+import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.service.payment.BalanceService;
 import by.radeflex.steamshop.service.payment.OrderService;
 import by.radeflex.steamshop.service.payment.PaymentService;
 import by.radeflex.steamshop.utils.ValidationUtils;
+import inet.ipaddr.IPAddressString;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -23,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Payment API", description = "API для оплаты и пополнения баланса")
@@ -30,10 +36,29 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final BalanceService balanceService;
     private final OrderService orderService;
+    private final ShopProperties shopProperties;
+
+    @SneakyThrows
+    private void checkRemoteAddr(String addr) {
+        IPAddressString address = new IPAddressString(addr);
+
+        boolean allowed = shopProperties.getYookassaHosts().stream()
+                .map(IPAddressString::new)
+                .anyMatch(range -> range.contains(address));
+
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+    }
 
     @Hidden
     @PostMapping("/status-webhook")
-    public ResponseEntity<?> handleStatus(@RequestBody PaymentStatusDto dto) {
+    public ResponseEntity<?> handleStatus(HttpServletRequest req,
+                                          @RequestBody PaymentStatusDto dto) {
+        String ip = Optional.ofNullable(req.getHeader("X-Forwarded-For"))
+                .map(s -> s.split(",")[0].trim())
+                .orElse(req.getRemoteAddr());
+        checkRemoteAddr(ip);
         paymentService.handleNotification(dto);
         return ResponseEntity.ok().build();
     }
