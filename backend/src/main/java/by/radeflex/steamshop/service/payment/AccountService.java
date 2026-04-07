@@ -17,7 +17,6 @@ import by.radeflex.steamshop.utils.CsvUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -74,7 +73,7 @@ public class AccountService {
         return accounts;
     }
 
-    Map<String, List<Account>> sellAccounts(Payment p)
+    public Map<String, List<Account>> sellAccounts(Payment p)
     throws AccountLackException {
         return getAccounts(p, AccountStatus.RESERVED).stream()
                 .peek(a -> {
@@ -122,7 +121,7 @@ public class AccountService {
             try {
                 accountRepository.save(accounts.get(i));
                 inserted++;
-            } catch (DataIntegrityViolationException e) {
+            } catch (Exception e) {
                 errorRows.add(i + 1);
             }
         }

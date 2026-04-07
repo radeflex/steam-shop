@@ -1,15 +1,12 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.dto.*;
-import by.radeflex.steamshop.dto.response.PageResponse;
 import by.radeflex.steamshop.entity.QUser;
 import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.filter.PredicateBuilder;
 import by.radeflex.steamshop.filter.UserFilter;
-import by.radeflex.steamshop.mapper.ProductHistoryMapper;
 import by.radeflex.steamshop.mapper.UserMapper;
-import by.radeflex.steamshop.repository.UserProductHistoryRepository;
 import by.radeflex.steamshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -34,8 +31,6 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final ProductHistoryMapper productHistoryMapper;
-    private final UserProductHistoryRepository userProductHistoryRepository;
     private final ImageService imageService;
     private final CurrentUserService currentUserService;
 
@@ -120,14 +115,6 @@ public class UserService implements UserDetailsService {
             u.setAvatarUrl(url);
         }
         return u;
-    }
-
-    @Cacheable(value = "user::product-history", key = "@currentUserService.getCurrentUserId()")
-    @Transactional(readOnly = true)
-    public PageResponse<ProductHistoryReadDto> getProductHistoryCurrent(Pageable pageable) {
-        var user = currentUserService.getCurrentUserEntity();
-        return PageResponse.of(userProductHistoryRepository.findByUser(user, pageable)
-                .map(productHistoryMapper::mapFrom));
     }
 
     @Override

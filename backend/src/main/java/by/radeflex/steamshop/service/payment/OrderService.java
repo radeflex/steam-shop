@@ -2,16 +2,16 @@ package by.radeflex.steamshop.service.payment;
 
 import by.radeflex.steamshop.entity.PaymentSource;
 import by.radeflex.steamshop.entity.UserProduct;
+import by.radeflex.steamshop.event.payment.ProcessOrderEvent;
+import by.radeflex.steamshop.event.payment.CreateOrderEvent;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
 import by.radeflex.steamshop.repository.UserRepository;
 import by.radeflex.steamshop.service.CurrentUserService;
-import by.radeflex.steamshop.service.MailService;
-import by.radeflex.steamshop.service.NotificationService;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +23,11 @@ import java.util.Optional;
 @Transactional
 public class OrderService {
     private final UserRepository userRepository;
-    private final NotificationService notificationService;
-    private final MailService mailService;
-    private final AccountService accountService;
     private final CurrentUserService currentUserService;
     private final ProductRepository productRepository;
     private final PaymentService paymentService;
     private final UserProductRepository userProductRepository;
+    private final ApplicationEventPublisher publisher;
 
     @Caching(evict = {
             @CacheEvict(
@@ -55,9 +53,7 @@ public class OrderService {
         if (p.isEmpty() || !u.withdraw(p.get().getPrice()))
             return false;
         var ePayment = paymentService.createPaymentViaBalance(u, p.get());
-        var accounts = accountService.sellAccounts(ePayment);
-        notificationService.sendPayment(ePayment);
-        mailService.sendAccounts(ePayment, accounts);
+        publisher.publishEvent(new ProcessOrderEvent(this, ePayment));
         return true;
     }
 
@@ -71,7 +67,6 @@ public class OrderService {
                     allEntries = true,
                     condition = "#result.isPresent()"
             )})
-    @SneakyThrows
     public Optional<String> purchaseViaCard(Integer productId) {
         var u = currentUserService.getCurrentUserEntity();
         var p = productRepository.findById(productId);
@@ -79,7 +74,7 @@ public class OrderService {
             return Optional.empty();
         var up = List.of(new UserProduct(null, u, p.get(), 1));
         var ePayment = paymentService.createPaymentViaCard(p.get().getPrice(), u, PaymentSource.CLICK, up);
-        notificationService.sendPayment(ePayment);
+        publisher.publishEvent(new CreateOrderEvent(this, ePayment));
         return Optional.of(ePayment.getConfirmationUrl());
     }
 
@@ -111,10 +106,7 @@ public class OrderService {
             return false;
         }
         var ePayment = paymentService.createPaymentCartViaBalance(user, sum, cart);
-        var accounts = accountService.sellAccounts(ePayment);
-        notificationService.sendPayment(ePayment);
-        mailService.sendAccounts(ePayment, accounts);
-        userProductRepository.deleteAllByUser(user);
+        publisher.publishEvent(new ProcessOrderEvent(this, ePayment));
         return true;
     }
 
@@ -127,7 +119,6 @@ public class OrderService {
                     value = "cart",
                     allEntries = true,
                     condition = "#result != null")})
-    @SneakyThrows
     public String purchaseCartViaCard() {
         var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var cart = userProductRepository.findAvailableByUser(user);
@@ -135,7 +126,7 @@ public class OrderService {
         Integer sum = cart.stream().mapToInt(up ->
                 up.getProduct().getPrice() * up.getQuantity()).sum();
         var ePayment = paymentService.createPaymentViaCard(sum, user, PaymentSource.CART, cart);
-        notificationService.sendPayment(ePayment);
+        publisher.publishEvent(new CreateOrderEvent(this, ePayment));
         return ePayment.getConfirmationUrl();
     }
 }

@@ -2,15 +2,11 @@ package by.radeflex.steamshop.service.payment;
 
 import by.radeflex.steamshop.dto.PaymentStatusDto;
 import by.radeflex.steamshop.entity.*;
-import by.radeflex.steamshop.exception.AccountLackException;
-import by.radeflex.steamshop.mapper.ProductHistoryMapper;
+import by.radeflex.steamshop.event.payment.CreateOrderEvent;
+import by.radeflex.steamshop.event.payment.ProcessOrderEvent;
 import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.PaymentItemRepository;
 import by.radeflex.steamshop.repository.PaymentRepository;
-import by.radeflex.steamshop.repository.UserProductHistoryRepository;
-import by.radeflex.steamshop.repository.UserProductRepository;
-import by.radeflex.steamshop.service.MailService;
-import by.radeflex.steamshop.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +23,7 @@ import me.dynomake.yookassa.model.request.receipt.ReceiptCustomer;
 import me.dynomake.yookassa.model.request.receipt.ReceiptItem;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,13 +38,9 @@ public class PaymentService {
     private final Yookassa yookassa;
     private final PaymentRepository paymentRepository;
     private final ShopProperties shopProperties;
-    private final NotificationService notificationService;
     private final PaymentItemRepository paymentItemRepository;
-    private final MailService mailService;
     private final AccountService accountService;
-    private final UserProductHistoryRepository userProductHistoryRepository;
-    private final ProductHistoryMapper productHistoryMapper;
-    private final UserProductRepository userProductRepository;
+    private final ApplicationEventPublisher publisher;
 
     @Caching(evict = {
             @CacheEvict(
@@ -68,27 +61,27 @@ public class PaymentService {
                     condition = "#result != null"
             )
     })
-    @SneakyThrows
     @Transactional
     public by.radeflex.steamshop.entity.Payment handleNotification(PaymentStatusDto dto) {
         var payment = paymentRepository.findById(dto.id());
-        try {
-            return payment.map(p -> {
-                switch (p.getType()) {
-                    case TOP_UP -> processTopUp(dto, p);
-                    case PURCHASE -> processPurchase(dto, p);
-                }
-                if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
-                    notificationService.sendPayment(p);
-                return p;
-            }).orElseThrow();
-        } catch (AccountLackException e) {
-            yookassa.createRefund(RefundRequest.builder()
-                            .paymentId(dto.id())
-                            .amount(new Amount((double)payment.get().getAmount()+"", "RUB"))
-                    .build());
-            return null;
-        }
+        return payment.map(p -> {
+            switch (p.getType()) {
+                case TOP_UP -> processTopUp(dto, p);
+                case PURCHASE -> processPurchase(dto, p);
+            }
+            p.setStatus(dto.event());
+            paymentRepository.save(p);
+            if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
+                publisher.publishEvent(new CreateOrderEvent(this, p));
+            return p;
+        }).orElseThrow();
+    }
+
+    public void createRefund(by.radeflex.steamshop.entity.Payment p) throws UnspecifiedShopInformation, BadRequestException, IOException {
+        yookassa.createRefund(RefundRequest.builder()
+                .paymentId(p.getId())
+                .amount(new Amount(p.getAmount() + ".00", "RUB"))
+                .build());
     }
 
     @SneakyThrows
@@ -115,8 +108,7 @@ public class PaymentService {
                 .status(PaymentStatus.SUCCEEDED)
                 .build());
         var up = List.of(new UserProduct(null, u, p, 1));
-        List<PaymentItem> items = savePaymentItems(up, ePayment);
-        saveHistory(items);
+        savePaymentItems(up, ePayment);
         return ePayment;
     }
 
@@ -129,8 +121,7 @@ public class PaymentService {
                 .amount(sum)
                 .status(PaymentStatus.SUCCEEDED)
                 .build());
-        List<PaymentItem> items = savePaymentItems(cart, ePayment);
-        saveHistory(items);
+        savePaymentItems(cart, ePayment);
         return ePayment;
     }
 
@@ -143,29 +134,15 @@ public class PaymentService {
     }
 
     private void processTopUp(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
-        switch (dto.event()) {
-            case CANCELED -> p.setStatus(PaymentStatus.CANCELED);
-            case SUCCEEDED -> {
-                p.getUser().topUp(p.getAmount());
-                p.setStatus(PaymentStatus.SUCCEEDED);
-            }
-        }
-        paymentRepository.save(p);
+        if (dto.event() == PaymentStatus.SUCCEEDED)
+            p.getUser().topUp(p.getAmount());
     }
 
     private void processPurchase(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
         switch (dto.event()) {
             case CANCELED -> accountService.unreserve(p);
-            case SUCCEEDED -> {
-                var accounts = accountService.sellAccounts(p);
-                mailService.sendAccounts(p, accounts);
-                saveHistory(paymentItemRepository.findAllByPayment(p));
-                if (p.getSource() == PaymentSource.CART)
-                    userProductRepository.deleteAllByUser(p.getUser());
-            }
+            case SUCCEEDED -> publisher.publishEvent(new ProcessOrderEvent(this, p));
         }
-        p.setStatus(dto.event());
-        paymentRepository.save(p);
     }
 
     private Payment createYookassaPayment(Integer sum, List<UserProduct> cart, User user) throws UnspecifiedShopInformation, BadRequestException, IOException {
@@ -194,12 +171,6 @@ public class PaymentService {
                                         .build()).toList())
                         .build())
                 .build());
-    }
-
-    private void saveHistory(List<PaymentItem> paymentItemRepository) {
-        paymentItemRepository.stream()
-                .map(productHistoryMapper::mapFrom)
-                .forEach(userProductHistoryRepository::save);
     }
 
     private List<PaymentItem> savePaymentItems(List<UserProduct> cart,  by.radeflex.steamshop.entity.Payment ePayment) {
