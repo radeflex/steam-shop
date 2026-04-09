@@ -22,9 +22,9 @@ public class UserProductHistoryService {
     private final CurrentUserService currentUserService;
 
     @Cacheable(value = "user::product-history", key = "@currentUserService.getCurrentUserId()")
-    public PageResponse<ProductHistoryReadDto> findAll(Pageable pageable) {
+    public PageResponse<ProductHistoryReadDto> findAllGrouped(Pageable pageable) {
         var user = currentUserService.getCurrentUserEntity();
-        return PageResponse.of(userProductHistoryRepository.findByUser(user, pageable)
+        return PageResponse.of(userProductHistoryRepository.findGroupedByUser(user, pageable)
                 .map(productHistoryMapper::mapFrom));
     }
 

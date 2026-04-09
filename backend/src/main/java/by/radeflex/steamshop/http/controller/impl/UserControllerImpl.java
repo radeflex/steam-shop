@@ -63,6 +63,6 @@ public class UserControllerImpl implements UserController {
 
     @GetMapping("/current/product-history")
     public ResponseEntity<PageResponse<ProductHistoryReadDto>> getCurrentUserProductHistory(Pageable pageable) {
-        return ResponseEntity.ok(userProductHistoryService.findAll(pageable));
+        return ResponseEntity.ok(userProductHistoryService.findAllGrouped(pageable));
     }
 }

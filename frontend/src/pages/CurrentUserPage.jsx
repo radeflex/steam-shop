@@ -269,19 +269,17 @@ export default function CurrentUserPage() {
                 <tr>
                   <th>Product ID</th>
                   <th>Title</th>
+                  <th>Price</th>
                   <th>Quantity</th>
-                  <th>Price per unit</th>
-                  <th>Total</th>
                 </tr>
                 </thead>
                 <tbody>
                 {history.content.map(p => (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
+                    <tr key={p.productId}>
+                      <td>{p.productId}</td>
                       <td>{p.title}</td>
-                      <td>{p.quantity}</td>
                       <td>{p.price} ₽</td>
-                      <td>{p.price * p.quantity} ₽</td>
+                      <td>{p.quantity}</td>
                     </tr>
                 ))}
                 </tbody>
