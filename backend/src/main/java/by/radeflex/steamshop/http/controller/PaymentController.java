@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 
+import java.util.UUID;
+
 @Tag(name = "Payment API", description = "API для оплаты и пополнения баланса")
 public interface PaymentController {
     @Hidden
@@ -24,6 +26,7 @@ public interface PaymentController {
     @ApiResponse(responseCode = "400", description = "Недостаточно средств или продукт недоступен")
     @ApiResponse(responseCode = "404", description = "Продукт не найден")
     ResponseEntity<?> purchaseViaBalance(
+            @Parameter(description = "Ключ идемпотентности") UUID key,
             @Parameter(description = "ID продукта", example = "1") Integer productId);
 
     @Operation(
@@ -32,26 +35,30 @@ public interface PaymentController {
     @ApiResponse(responseCode = "200", description = "URL страницы оплаты")
     @ApiResponse(responseCode = "404", description = "Продукт не найден")
     ResponseEntity<ConfirmationUrlResponse> purchaseViaCard(
+            @Parameter(description = "Ключ идемпотентности") UUID key,
             @Parameter(description = "ID продукта", example = "1") Integer productId);
 
     @Operation(
             summary = "Оплатить корзину картой",
             description = "Инициирует оплату всей корзины картой через YooKassa, возвращает URL для оплаты")
     @ApiResponse(responseCode = "200", description = "URL страницы оплаты")
-     ResponseEntity<ConfirmationUrlResponse> purchaseCartViaCard();
+     ResponseEntity<ConfirmationUrlResponse> purchaseCartViaCard(
+            @Parameter(description = "Ключ идемпотентности") UUID key);
 
     @Operation(
             summary = "Оплатить корзину за баланс",
             description = "Выполняет покупку всех товаров из корзины, списывая средства с баланса")
     @ApiResponse(responseCode = "200", description = "Корзина оплачена успешно")
     @ApiResponse(responseCode = "400", description = "Недостаточно средств или корзина пуста")
-     ResponseEntity<?> purchaseCartViaBalance();
+     ResponseEntity<?> purchaseCartViaBalance(
+            @Parameter(description = "Ключ идемпотентности") UUID key);
 
     @Operation(
             summary = "Пополнить баланс",
             description = "Инициирует пополнение баланса через YooKassa, возвращает URL для оплаты")
     @ApiResponse(responseCode = "200", description = "URL страницы пополнения")
     @ApiResponse(responseCode = "400", description = "Ошибка валидации суммы")
-     ResponseEntity<ConfirmationUrlResponse> topUpBalance(TopUpDto topUpDto,
-                                                                BindingResult bindingResult);
+     ResponseEntity<ConfirmationUrlResponse> topUpBalance(
+             @Parameter(description = "Ключ идемпотентности") UUID key,
+             TopUpDto topUpDto, BindingResult bindingResult);
 }

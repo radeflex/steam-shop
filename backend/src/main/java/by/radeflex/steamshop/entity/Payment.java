@@ -33,4 +33,5 @@ public class Payment {
     private PaymentSource source;
     @Column(insertable = false)
     private LocalDateTime createdAt;
+    private UUID idempotencyKey;
 }

@@ -10,6 +10,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class BalanceService {
@@ -19,10 +21,12 @@ public class BalanceService {
     private final ApplicationEventPublisher publisher;
 
     @Transactional
-    public String topUp(TopUpDto topUpDto) {
+    public String topUp(UUID key, TopUpDto topUpDto) {
+        var pm = paymentService.findPaymentByKey(key);
+        if (pm.isPresent()) return pm.get().getConfirmationUrl();
         User user = userRepository.findById(currentUserService.getCurrentUserId())
                 .orElseThrow();
-        var ePayment = paymentService.createPaymentTopUp(topUpDto.amount(), user);
+        var ePayment = paymentService.createPaymentTopUp(key, topUpDto.amount(), user);
         publisher.publishEvent(new CreateOrderEvent(this, ePayment));
         return ePayment.getConfirmationUrl();
     }

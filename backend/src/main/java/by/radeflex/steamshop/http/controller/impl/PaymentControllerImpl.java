@@ -17,13 +17,11 @@ import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -58,39 +56,44 @@ public class PaymentControllerImpl implements PaymentController {
     }
 
     @PostMapping("/purchase-balance/{productId}")
-    public ResponseEntity<?> purchaseViaBalance(@PathVariable Integer productId) {
-        if (!orderService.purchaseViaBalance(productId)) {
+    public ResponseEntity<?> purchaseViaBalance(
+            @RequestHeader("Idempotency-key") UUID key,
+            @PathVariable Integer productId) {
+        if (!orderService.purchaseViaBalance(key, productId)) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/purchase-card/{productId}")
-    public ResponseEntity<ConfirmationUrlResponse> purchaseViaCard(@PathVariable Integer productId) {
-        var url = orderService.purchaseViaCard(productId);
+    public ResponseEntity<ConfirmationUrlResponse> purchaseViaCard(
+            @RequestHeader("Idempotency-key") UUID key,
+            @PathVariable Integer productId) {
+        var url = orderService.purchaseViaCard(key, productId);
         return ResponseEntity.ok(new ConfirmationUrlResponse(url
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))));
     }
 
     @PostMapping("/purchase-card")
-    public ResponseEntity<ConfirmationUrlResponse> purchaseCartViaCard() {
-        var url = orderService.purchaseCartViaCard();
+    public ResponseEntity<ConfirmationUrlResponse> purchaseCartViaCard(@RequestHeader("Idempotency-key") UUID key) {
+        var url = orderService.purchaseCartViaCard(key);
         return ResponseEntity.ok(new ConfirmationUrlResponse(url));
     }
 
     @PostMapping("/purchase-balance")
-    public ResponseEntity<?> purchaseCartViaBalance() {
-        if (!orderService.purchaseCartViaBalance()) {
+    public ResponseEntity<?> purchaseCartViaBalance(@RequestHeader("Idempotency-key") UUID key) {
+        if (!orderService.purchaseCartViaBalance(key)) {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/top-up")
-    public ResponseEntity<ConfirmationUrlResponse> topUpBalance(@RequestBody @Valid TopUpDto topUpDto,
-                                          BindingResult bindingResult) {
+    @PutMapping("/top-up")
+    public ResponseEntity<ConfirmationUrlResponse> topUpBalance(
+            @RequestHeader("Idempotency-key") UUID key,
+            @RequestBody @Valid TopUpDto topUpDto, BindingResult bindingResult) {
         ValidationUtils.checkErrors(bindingResult);
-        String url = balanceService.topUp(topUpDto);
+        String url = balanceService.topUp(key, topUpDto);
         return ResponseEntity.ok(new ConfirmationUrlResponse(url));
     }
 }

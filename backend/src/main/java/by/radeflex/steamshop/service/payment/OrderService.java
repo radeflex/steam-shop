@@ -2,8 +2,8 @@ package by.radeflex.steamshop.service.payment;
 
 import by.radeflex.steamshop.entity.PaymentSource;
 import by.radeflex.steamshop.entity.UserProduct;
-import by.radeflex.steamshop.event.payment.ProcessOrderEvent;
 import by.radeflex.steamshop.event.payment.CreateOrderEvent;
+import by.radeflex.steamshop.event.payment.ProcessOrderEvent;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
 import by.radeflex.steamshop.repository.UserRepository;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -47,12 +48,14 @@ public class OrderService {
                     allEntries = true,
                     condition = "#result"
             )})
-    public boolean purchaseViaBalance(Integer productId) {
+    public boolean purchaseViaBalance(UUID key, Integer productId) {
+        var pm = paymentService.findPaymentByKey(key);
+        if (pm.isPresent()) return false;
         var u = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var p = productRepository.findById(productId);
         if (p.isEmpty() || !u.withdraw(p.get().getPrice()))
             return false;
-        var ePayment = paymentService.createPaymentViaBalance(u, p.get());
+        var ePayment = paymentService.createPaymentViaBalance(key, u, p.get());
         publisher.publishEvent(new ProcessOrderEvent(this, ePayment));
         return true;
     }
@@ -67,13 +70,15 @@ public class OrderService {
                     allEntries = true,
                     condition = "#result.isPresent()"
             )})
-    public Optional<String> purchaseViaCard(Integer productId) {
+    public Optional<String> purchaseViaCard(UUID key, Integer productId) {
+        var pm = paymentService.findPaymentByKey(key);
+        if (pm.isPresent()) return Optional.of(pm.get().getConfirmationUrl());
         var u = currentUserService.getCurrentUserEntity();
         var p = productRepository.findById(productId);
         if (p.isEmpty())
             return Optional.empty();
         var up = List.of(new UserProduct(null, u, p.get(), 1));
-        var ePayment = paymentService.createPaymentViaCard(p.get().getPrice(), u, PaymentSource.CLICK, up);
+        var ePayment = paymentService.createPaymentViaCard(key, p.get().getPrice(), u, PaymentSource.CLICK, up);
         publisher.publishEvent(new CreateOrderEvent(this, ePayment));
         return Optional.of(ePayment.getConfirmationUrl());
     }
@@ -96,7 +101,9 @@ public class OrderService {
                     allEntries = true,
                     condition = "#result"
             )})
-    public boolean purchaseCartViaBalance() {
+    public boolean purchaseCartViaBalance(UUID key) {
+        var pm = paymentService.findPaymentByKey(key);
+        if (pm.isPresent()) return false;
         var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var cart = userProductRepository.findAvailableByUser(user);
         if (cart.isEmpty()) throw new IllegalArgumentException();
@@ -105,7 +112,7 @@ public class OrderService {
         if (!user.withdraw(sum)) {
             return false;
         }
-        var ePayment = paymentService.createPaymentCartViaBalance(user, sum, cart);
+        var ePayment = paymentService.createPaymentCartViaBalance(key, user, sum, cart);
         publisher.publishEvent(new ProcessOrderEvent(this, ePayment));
         return true;
     }
@@ -119,13 +126,15 @@ public class OrderService {
                     value = "cart",
                     allEntries = true,
                     condition = "#result != null")})
-    public String purchaseCartViaCard() {
+    public String purchaseCartViaCard(UUID key) {
+        var pm = paymentService.findPaymentByKey(key);
+        if (pm.isPresent()) return pm.get().getConfirmationUrl();
         var user = userRepository.findById(currentUserService.getCurrentUserId()).orElseThrow();
         var cart = userProductRepository.findAvailableByUser(user);
         if (cart.isEmpty()) throw new IllegalArgumentException();
         Integer sum = cart.stream().mapToInt(up ->
                 up.getProduct().getPrice() * up.getQuantity()).sum();
-        var ePayment = paymentService.createPaymentViaCard(sum, user, PaymentSource.CART, cart);
+        var ePayment = paymentService.createPaymentViaCard(key, sum, user, PaymentSource.CART, cart);
         publisher.publishEvent(new CreateOrderEvent(this, ePayment));
         return ePayment.getConfirmationUrl();
     }

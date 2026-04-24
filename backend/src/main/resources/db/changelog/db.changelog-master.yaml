@@ -21,3 +21,5 @@ databaseChangeLog:
       file: db/changelog/changes/010-added-payment-source.sql
   - include:
       file: db/changelog/changes/011-removed-no-avatar.sql
+  - include:
+      file: db/changelog/changes/012-added-payment-idempotency.sql

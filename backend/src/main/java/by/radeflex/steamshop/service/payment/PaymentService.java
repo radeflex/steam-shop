@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -85,7 +86,7 @@ public class PaymentService {
     }
 
     @SneakyThrows
-    by.radeflex.steamshop.entity.Payment createPaymentTopUp(Integer amount, User user) {
+    by.radeflex.steamshop.entity.Payment createPaymentTopUp(UUID key, Integer amount, User user) {
         var up = UserProduct.builder()
                 .user(user)
                 .product(Product.builder()
@@ -95,10 +96,14 @@ public class PaymentService {
                 .quantity(1)
                 .build();
         var payment = createYookassaPayment(amount, List.of(up), user);
-        return savePayment(payment, user, PaymentType.TOP_UP, null);
+        return savePayment(payment, user, PaymentType.TOP_UP, null, key);
     }
 
-     by.radeflex.steamshop.entity.Payment createPaymentViaBalance(User u, Product p) {
+    Optional<by.radeflex.steamshop.entity.Payment> findPaymentByKey(UUID key) {
+        return paymentRepository.findByIdempotencyKey(key);
+    }
+
+     by.radeflex.steamshop.entity.Payment createPaymentViaBalance(UUID key, User u, Product p) {
         var ePayment = paymentRepository.save(by.radeflex.steamshop.entity.Payment.builder()
                 .id(UUID.randomUUID())
                 .user(u)
@@ -106,13 +111,14 @@ public class PaymentService {
                 .type(PaymentType.PURCHASE)
                 .amount(p.getPrice())
                 .status(PaymentStatus.SUCCEEDED)
+                .idempotencyKey(key)
                 .build());
         var up = List.of(new UserProduct(null, u, p, 1));
         savePaymentItems(up, ePayment);
         return ePayment;
     }
 
-    by.radeflex.steamshop.entity.Payment createPaymentCartViaBalance(User user, Integer sum, List<UserProduct> cart) {
+    by.radeflex.steamshop.entity.Payment createPaymentCartViaBalance(UUID key, User user, Integer sum, List<UserProduct> cart) {
         var ePayment = paymentRepository.save(by.radeflex.steamshop.entity.Payment.builder()
                 .id(UUID.randomUUID())
                 .user(user)
@@ -120,15 +126,16 @@ public class PaymentService {
                 .type(PaymentType.PURCHASE)
                 .amount(sum)
                 .status(PaymentStatus.SUCCEEDED)
+                .idempotencyKey(key)
                 .build());
         savePaymentItems(cart, ePayment);
         return ePayment;
     }
 
     @SneakyThrows
-    by.radeflex.steamshop.entity.Payment createPaymentViaCard(Integer sum, User user, PaymentSource source, List<UserProduct> cart) {
+    by.radeflex.steamshop.entity.Payment createPaymentViaCard(UUID key, Integer sum, User user, PaymentSource source, List<UserProduct> cart) {
         var payment = createYookassaPayment(sum, cart, user);
-        var ePayment = savePayment(payment, user, PaymentType.PURCHASE, source);
+        var ePayment = savePayment(payment, user, PaymentType.PURCHASE, source, key);
         savePaymentItems(cart, ePayment);
         return ePayment;
     }
@@ -184,7 +191,7 @@ public class PaymentService {
         return pis;
     }
 
-    private by.radeflex.steamshop.entity.Payment savePayment(Payment payment, User user, PaymentType type, PaymentSource source) {
+    private by.radeflex.steamshop.entity.Payment savePayment(Payment payment, User user, PaymentType type, PaymentSource source, UUID key) {
         return paymentRepository.save(by.radeflex.steamshop.entity.Payment.builder()
                 .id(payment.getId())
                 .source(source)
@@ -193,6 +200,7 @@ public class PaymentService {
                 .status(PaymentStatus.valueOf(payment.getStatus().toUpperCase()))
                 .amount(Double.valueOf(payment.getAmount().getValue()).intValue())
                 .user(user)
+                .idempotencyKey(key)
                 .build());
     }
 }
