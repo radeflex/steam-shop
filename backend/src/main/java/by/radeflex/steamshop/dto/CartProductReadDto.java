@@ -12,8 +12,6 @@ public record CartProductReadDto(
         Integer productId,
         @Schema(description = "Название продукта", example = "Counter-Strike 2")
         String title,
-        @Schema(description = "Описание продукта")
-        String description,
         @Schema(description = "Цена за единицу (в рублях)", example = "499")
         Integer price,
         @Schema(description = "URL превью-изображения", example = "550e8400-e29b-41d4-a716-446655440000")
