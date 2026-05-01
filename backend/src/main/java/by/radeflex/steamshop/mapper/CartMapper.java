@@ -4,24 +4,18 @@ import by.radeflex.steamshop.dto.CartProductReadDto;
 import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.entity.UserProduct;
 import jakarta.persistence.Tuple;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class CartMapper {
-    public CartProductReadDto mapFrom(UserProduct userProduct) {
-        Product product = userProduct.getProduct();
-        return CartProductReadDto.builder()
-                .id(userProduct.getId())
-                .productId(product.getId())
-                .title(product.getTitle())
-                .description(product.getDescription())
-                .price(product.getPrice())
-                .previewUrl(product.getPreviewUrl())
-                .quantity(userProduct.getQuantity())
-                .build();
-    }
+@Mapper(componentModel = "spring")
+public interface CartMapper {
+    @Mapping(source = "product.id", target = "productId")
+    @Mapping(source = "product.title", target = "title")
+    @Mapping(source = "product.price", target = "price")
+    @Mapping(source = "product.previewUrl", target = "previewUrl")
+    CartProductReadDto mapFrom(UserProduct up);
 
-    public CartProductReadDto mapFrom(Tuple t) {
+    default CartProductReadDto mapFrom(Tuple t) {
             var userProduct = t.get("userProduct", UserProduct.class);
             var isEnough = t.get("isEnough", Boolean.class);
             Product product = userProduct.getProduct();
@@ -29,7 +23,6 @@ public class CartMapper {
                     .id(userProduct.getId())
                     .productId(product.getId())
                     .title(product.getTitle())
-                    .description(product.getDescription())
                     .price(product.getPrice())
                     .previewUrl(product.getPreviewUrl())
                     .quantity(userProduct.getQuantity())
