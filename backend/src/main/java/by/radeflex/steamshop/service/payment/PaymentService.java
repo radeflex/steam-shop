@@ -70,7 +70,6 @@ public class PaymentService {
                 case TOP_UP -> processTopUp(dto, p);
                 case PURCHASE -> processPurchase(dto, p);
             }
-            p.setStatus(dto.event());
             paymentRepository.save(p);
             if (dto.event() != PaymentStatus.WAITING_FOR_CAPTURE)
                 publisher.publishEvent(new CreateOrderEvent(this, p));
@@ -141,8 +140,11 @@ public class PaymentService {
     }
 
     private void processTopUp(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
-        if (dto.event() == PaymentStatus.SUCCEEDED)
+        if (dto.event() == PaymentStatus.SUCCEEDED
+                && p.getStatus() != PaymentStatus.SUCCEEDED) {
+            p.setStatus(dto.event());
             p.getUser().topUp(p.getAmount());
+        }
     }
 
     private void processPurchase(PaymentStatusDto dto, by.radeflex.steamshop.entity.Payment p) {
@@ -150,6 +152,7 @@ public class PaymentService {
             case CANCELED -> accountService.unreserve(p);
             case SUCCEEDED -> publisher.publishEvent(new ProcessOrderEvent(this, p));
         }
+        p.setStatus(dto.event());
     }
 
     private Payment createYookassaPayment(Integer sum, List<UserProduct> cart, User user) throws UnspecifiedShopInformation, BadRequestException, IOException {

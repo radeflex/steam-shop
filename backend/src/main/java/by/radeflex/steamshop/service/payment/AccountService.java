@@ -17,9 +17,10 @@ import by.radeflex.steamshop.utils.CsvUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -61,18 +62,18 @@ public class AccountService {
 
      private List<Account> getAccounts(Payment p, AccountStatus status)
      throws AccountLackException {
-        var paymentItems = paymentItemRepository.findAllByPayment(p);
-        int quantity = paymentItems.stream().mapToInt(PaymentItem::getQuantity).sum();
-        var accounts = paymentItems.stream()
-                .flatMap(item -> accountRepository.findByProductIdAndStatus(
-                        item.getProduct().getId(),
-                        status,
-                        Limit.of(item.getQuantity())).stream())
-                .toList();
-        if (accounts.size() < quantity) throw new AccountLackException();
+        int paymentq = paymentItemRepository.findAllByPayment(p)
+                .stream().mapToInt(PaymentItem::getQuantity).sum();
+        var accounts = accountRepository.findByStatus(p.getId(), status.name());
+        if (paymentq != accounts.size())
+            throw new AccountLackException();
         return accounts;
     }
 
+    @Retryable(
+            retryFor = AccountLackException.class,
+            maxAttempts = 4,
+            backoff = @Backoff(delay = 50, multiplier = 2))
     public Map<String, List<Account>> sellAccounts(Payment p)
     throws AccountLackException {
         return getAccounts(p, AccountStatus.RESERVED).stream()
@@ -119,7 +120,9 @@ public class AccountService {
                 .map(a -> accountMapper.mapFrom(a, user)).toList();
         for (int i = 0; i < accounts.size(); ++i) {
             try {
-                accountRepository.save(accounts.get(i));
+                var a = accounts.get(i);
+                a.setId(null);
+                accountRepository.saveAndFlush(a);
                 inserted++;
             } catch (Exception e) {
                 errorRows.add(i + 1);
