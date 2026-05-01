@@ -5,7 +5,6 @@ import by.radeflex.steamshop.dto.response.MessageResponse;
 import by.radeflex.steamshop.dto.response.PageResponse;
 import by.radeflex.steamshop.http.controller.CartController;
 import by.radeflex.steamshop.service.CartService;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,7 @@ public class CartControllerImpl implements CartController {
 
     @PutMapping("/{id}/quantity/{quantity}")
     public ResponseEntity<CartProductReadDto> updateQuantity(@PathVariable Integer id,
-                                                             @PathVariable @Min(1) Integer quantity) {
+                                                             @PathVariable Integer quantity) {
         return ResponseEntity.ok(cartService.updateQuantity(id, quantity)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
