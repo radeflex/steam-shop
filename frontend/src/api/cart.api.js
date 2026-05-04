@@ -13,13 +13,25 @@ export const removeFromCart = id =>
   api.delete(`/cart/${id}`);
 
 export const purchaseViaCard = (id) =>
-  api.post(`/purchase-card/${id}`);
+  api.post(`/purchase-card/${id}`, {}, {
+      headers: {
+          "Idempotency-key": crypto.randomUUID()
+      }});
 
 export const purchaseViaBalance = (id) =>
-  api.post(`/purchase-balance/${id}`);
+  api.post(`/purchase-balance/${id}`, {}, {
+      headers: {
+          "Idempotency-key": crypto.randomUUID()
+      }});
 
 export const purchaseCartViaCard = () =>
-  api.post(`/purchase-card`);
+  api.post(`/purchase-card`, {}, {
+      headers: {
+          "Idempotency-key": crypto.randomUUID()
+      }});
 
 export const purchaseCartViaBalance = () =>
-  api.post(`/purchase-balance`);
+  api.post(`/purchase-balance`, {}, {
+      headers: {
+          "Idempotency-key": crypto.randomUUID()
+      }});
