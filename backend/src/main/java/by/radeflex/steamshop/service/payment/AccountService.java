@@ -45,11 +45,9 @@ public class AccountService {
     }
 
     private void changeStatus(Payment p, AccountStatus f, AccountStatus t) {
-        getAccounts(p, f)
-                .forEach(a -> {
-                    a.setStatus(t);
-                    accountRepository.save(a);
-                });
+        var accounts = getAccounts(p, f)
+                .stream().peek(a -> a.setStatus(t)).toList();
+        accountRepository.saveAll(accounts);
     }
 
     void reserve(Payment p) throws AccountLackException {
@@ -76,11 +74,10 @@ public class AccountService {
             backoff = @Backoff(delay = 50, multiplier = 2))
     public Map<String, List<Account>> sellAccounts(Payment p)
     throws AccountLackException {
-        return getAccounts(p, AccountStatus.RESERVED).stream()
-                .peek(a -> {
-                    a.setStatus(AccountStatus.SOLD);
-                    accountRepository.save(a);
-                })
+        var accounts = getAccounts(p, AccountStatus.RESERVED);
+        accounts.forEach(a -> a.setStatus(AccountStatus.SOLD));
+        accountRepository.saveAll(accounts);
+        return accounts.stream()
                 .collect(Collectors.groupingBy(a -> a.getProduct().getTitle()));
     }
 

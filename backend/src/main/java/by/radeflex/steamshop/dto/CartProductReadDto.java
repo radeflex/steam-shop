@@ -2,9 +2,11 @@ package by.radeflex.steamshop.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.With;
 
 @Builder
 @Schema(description = "Товар в корзине")
+@With
 public record CartProductReadDto(
         @Schema(description = "ID позиции в корзине", example = "1")
         Integer id,
