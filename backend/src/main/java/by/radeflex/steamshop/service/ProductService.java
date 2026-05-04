@@ -34,6 +34,11 @@ public class ProductService {
                 .map(productMapper::mapFrom));
     }
 
+    public PageResponse<ProductAdminReadDto> findAllAdmin(ProductFilter filter, Pageable pageable) {
+        return PageResponse.of(productRepository.findAllWithAccountsLeft(filter, pageable)
+                .map(productMapper::mapFrom));
+    }
+
     public Optional<ProductReadDto> findById(Integer id) {
         return productRepository.findById(id).map(productMapper::mapFrom);
     }

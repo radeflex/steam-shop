@@ -1,5 +1,6 @@
 package by.radeflex.steamshop.http.controller;
 
+import by.radeflex.steamshop.dto.ProductAdminReadDto;
 import by.radeflex.steamshop.dto.ProductCreateDto;
 import by.radeflex.steamshop.dto.ProductReadDto;
 import by.radeflex.steamshop.dto.ProductUpdateDto;
@@ -18,10 +19,16 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Product API", description = "API для управления продуктами магазина")
 public interface ProductController {
     @Operation(
-            summary = "Получить список продуктов",
+            summary = "Получить список доступных продуктов",
             description = "Возвращает страницу продуктов с возможностью фильтрации")
     @ApiResponse(responseCode = "200", description = "Список продуктов")
     ResponseEntity<PageResponse<ProductReadDto>> findAll(ProductFilter filter, Pageable pageable);
+
+    @Operation(
+            summary = "Получить полный список продуктов (ADMIN)",
+            description = "Возвращает страницу продуктов с возможностью фильтрации")
+    @ApiResponse(responseCode = "200", description = "Список продуктов")
+    ResponseEntity<PageResponse<ProductAdminReadDto>> findAllAdmin(ProductFilter filter, Pageable pageable);
 
     @Operation(
             summary = "Создать новый продукт (ADMIN)",

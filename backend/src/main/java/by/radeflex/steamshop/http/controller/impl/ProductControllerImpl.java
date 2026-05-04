@@ -1,5 +1,6 @@
 package by.radeflex.steamshop.http.controller.impl;
 
+import by.radeflex.steamshop.dto.ProductAdminReadDto;
 import by.radeflex.steamshop.dto.ProductCreateDto;
 import by.radeflex.steamshop.dto.ProductReadDto;
 import by.radeflex.steamshop.dto.ProductUpdateDto;
@@ -33,6 +34,11 @@ public class ProductControllerImpl implements ProductController {
     @GetMapping
     public ResponseEntity<PageResponse<ProductReadDto>> findAll(ProductFilter filter, Pageable pageable) {
         return ResponseEntity.ok(productService.findAll(filter, pageable));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<PageResponse<ProductAdminReadDto>> findAllAdmin(ProductFilter filter, Pageable pageable) {
+        return ResponseEntity.ok(productService.findAllAdmin(filter, pageable));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

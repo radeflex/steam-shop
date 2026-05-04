@@ -1,10 +1,8 @@
 package by.radeflex.steamshop.mapper;
 
-import by.radeflex.steamshop.dto.ProductCreateDto;
-import by.radeflex.steamshop.dto.ProductUpdateDto;
-import by.radeflex.steamshop.dto.ProductInfo;
-import by.radeflex.steamshop.dto.ProductReadDto;
+import by.radeflex.steamshop.dto.*;
 import by.radeflex.steamshop.entity.Product;
+import com.querydsl.core.Tuple;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,6 +31,21 @@ public class ProductMapper {
                 .previewUrl(product.getPreviewUrl() == null
                         ? "no-image"
                         : product.getPreviewUrl())
+                .build();
+    }
+
+    public ProductAdminReadDto mapFrom(Tuple tuple) {
+        var product = tuple.get(0, Product.class);
+        var left = tuple.get(1, Long.class);
+        return ProductAdminReadDto.builder()
+                .id(product.getId())
+                .title(product.getTitle())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .previewUrl(product.getPreviewUrl() == null
+                        ? "no-image"
+                        : product.getPreviewUrl())
+                .left(left)
                 .build();
     }
 }

@@ -5,6 +5,8 @@ import by.radeflex.steamshop.entity.Product;
 import by.radeflex.steamshop.filter.ProductFilter;
 import by.radeflex.steamshop.repository.ProductRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +26,41 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
     public Page<Product> findAllAvailable(ProductFilter filter, Pageable pageable) {
         var queryFactory = new JPAQueryFactory(em);
 
-        BooleanBuilder builder = new BooleanBuilder();
-        if (filter.title() != null) builder.and(product.title.containsIgnoreCase(filter.title()));
-        if (filter.priceMin() != null) builder.and(product.price.goe(filter.priceMin()));
-        if (filter.priceMax() != null) builder.and(product.price.loe(filter.priceMax()));
-
         var query = queryFactory.selectFrom(product)
                 .join(account)
                 .on(product.id.eq(account.product.id))
-                .where(builder.and(account.status.eq(AccountStatus.AVAILABLE)))
+                .where(account.status.eq(AccountStatus.AVAILABLE)
+                        .and(buildPredicate(filter)))
                 .groupBy(product.id)
                 .having(account.count().gt(0))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
         return new PageImpl<>(query);
+    }
+
+    @Override
+    public Page<Tuple> findAllWithAccountsLeft(ProductFilter filter, Pageable pageable) {
+        var queryFactory = new JPAQueryFactory(em);
+
+        var query = queryFactory
+                .select(product, account.id.count()).from(product)
+                .leftJoin(account)
+                .on(product.id.eq(account.product.id)
+                        .and(account.status.eq(AccountStatus.AVAILABLE)))
+                .where(buildPredicate(filter))
+                .groupBy(product.id)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+        return new PageImpl<>(query);
+    }
+
+    private Predicate buildPredicate(ProductFilter filter) {
+        BooleanBuilder builder = new BooleanBuilder();
+        if (filter.title() != null) builder.and(product.title.containsIgnoreCase(filter.title()));
+        if (filter.priceMin() != null) builder.and(product.price.goe(filter.priceMin()));
+        if (filter.priceMax() != null) builder.and(product.price.loe(filter.priceMax()));
+        return builder.getValue();
     }
 }

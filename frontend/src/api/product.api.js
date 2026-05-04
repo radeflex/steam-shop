@@ -5,6 +5,11 @@ export const getProducts = (filter, pageable) =>
     params: { ...filter, ...pageable }
   });
 
+export const getAdminProducts = (filter, pageable) =>
+    api.get("/products/admin", {
+      params: { ...filter, ...pageable }
+    });
+
 export const getProduct = id =>
   api.get(`/products/${id}`);
 
@@ -30,6 +35,3 @@ export const updateProduct = (id, data, image) => {
 
 export const deleteProduct = id =>
   api.delete(`/products/${id}`);
-
-export const purchaseProducts = orders =>
-  api.post("/products/purchase", orders);
