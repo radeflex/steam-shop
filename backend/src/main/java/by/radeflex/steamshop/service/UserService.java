@@ -98,6 +98,8 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    @CacheEvict(value = "user::current",
+            key = "@currentUserService.getCurrentUserId()")
     public void resetAvatar() {
         var user = userRepository.findById(currentUserService.getCurrentUserEntity().getId()).orElseThrow();
         if (user.getAvatarUrl() != null) {
