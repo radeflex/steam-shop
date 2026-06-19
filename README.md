@@ -14,8 +14,8 @@ A fullstack web application for buying and selling Steam accounts — with a use
 - [About](#about)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
-- [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 
 ---
@@ -70,6 +70,17 @@ Steam Shop is a fullstack e-commerce platform for purchasing Steam accounts. It 
 
 ---
 
+## Screenshots
+![home.png](screenshots/home.png)
+![paymentmethod.png](screenshots/paymentmethod.png)
+![profile.png](screenshots/profile.png)
+![cart.png](screenshots/cart.png)
+![order.png](screenshots/order.png)
+### Admin panel
+![admin_products.png](screenshots/admin_products.png)
+![admin_accounts.png](screenshots/admin_accounts.png)
+![admin_notifications.png](screenshots/admin_notifications.png)
+
 ## Architecture
 
 The backend follows a clean layered architecture:
@@ -94,83 +105,6 @@ Controller → Service → Repository → Database
 
 ---
 
-## Project Structure
-
-```
-steam-shop/
-├── backend/
-│   └── src/main/java/by/radeflex/steamshop/
-│       ├── configuration/
-│       ├── dto/
-│       ├── entity/
-│       │   ├── User.java / UserRole.java
-│       │   ├── Account.java / AccountStatus.java
-│       │   ├── Product.java
-│       │   ├── UserProduct.java / UserProductHistory.java
-│       │   ├── Payment.java / PaymentItem.java
-│       │   ├── PaymentStatus.java / PaymentType.java / PaymentSource.java
-│       │   ├── Notification.java / NotificationRead.java / NotificationType.java
-│       │   └── EmailConfirmation.java
-│       ├── http/
-│       │   ├── controller/
-│       │   │   ├── AuthController.java
-│       │   │   ├── UserController.java
-│       │   │   ├── ProductController.java
-│       │   │   ├── AccountController.java
-│       │   │   ├── CartController.java
-│       │   │   ├── PaymentController.java
-│       │   │   ├── NotificationController.java
-│       │   │   ├── EmailConfirmationController.java
-│       │   │   └── ImageController.java
-│       │   ├── filter/
-│       │   └── handler/
-│       ├── mapper/
-│       ├── props/
-│       ├── repository/
-│       │   ├── UserRepository.java
-│       │   ├── AccountRepository.java
-│       │   ├── ProductRepository.java
-│       │   ├── UserProductRepository.java / UserProductHistoryRepository.java
-│       │   ├── PaymentRepository.java / PaymentItemRepository.java
-│       │   ├── NotificationRepository.java / NotificationReadRepository.java
-│       │   └── EmailConfirmationRepository.java
-│       ├── service/
-│       │   ├── AuthService.java / JwtService.java
-│       │   ├── UserService.java / CurrentUserService.java
-│       │   ├── ProductService.java / AccountService.java
-│       │   ├── CartService.java / PaymentService.java
-│       │   ├── NotificationService.java
-│       │   ├── EmailConfirmationService.java
-│       │   ├── MailService.java
-│       │   └── ImageService.java
-│       ├── utils/
-│       └── SteamShopApplication.java
-│
-├── frontend/
-│   └── src/
-│       ├── api/
-│       ├── components/
-│       │   ├── AppNavbar.jsx / ProductCard.jsx / CartCard.jsx
-│       │   └── admin/
-│       ├── context/
-│       ├── layouts/
-│       └── pages/
-│           ├── ProductsPage.jsx / CartPage.jsx
-│           ├── LoginPage.jsx / RegisterPage.jsx
-│           ├── ConfirmEmailPage.jsx
-│           ├── CurrentUserPage.jsx / UserEditPage.jsx
-│           ├── status/
-│           └── admin/
-│               ├── AccountsPage.jsx
-│               ├── ProductsPage.jsx / ProductFormPage.jsx
-│               └── NotificationsPage.jsx / NotificationCreatePage.jsx
-│
-├── .github/workflows/
-└── docker-compose.yml
-```
-
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -178,20 +112,60 @@ steam-shop/
 - [Docker](https://www.docker.com/) & Docker Compose
 - [Java 17+](https://adoptium.net/) *(for local backend dev)*
 - [Node.js 18+](https://nodejs.org/) *(for local frontend dev)*
+- Localhost tunneling for Yookassa ([Ngrok](https://nodejs.org/) or [Cloudpub](https://cloudpub.ru) in Russia)
+
+### Typical .env configuration
+
+```bash
+# SMTP mailing creds
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=steamshop@gmail.com
+MAIL_PASSWORD=xxxxxxxxxxxxxxxxxx
+
+# Postgres creds
+DB_NAME=steamsh
+DB_USERNAME=postgres
+DB_PASSWORD=123123
+
+# S3
+S3_BUCKET=bucket
+S3_ENDPOINT=https://s3.storage.selcloud.ru
+S3_REGION=ru-1
+S3_ACCESS=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+S3_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+JWT_SECRET=veryverystrongjwtsecretatleast36chars
+
+# Yookassa api creds
+SHOP_ID=12345678
+SHOP_TOKEN=test_xxxxxxxxxxxxxxxxxxxxxx
+
+UI_URL=https://example.com/ # frontend domain
+```
 
 ### Run with Docker
 
 ```bash
 git clone https://github.com/radeflex/steam-shop.git
 cd steam-shop
-docker compose up -d // needs .env configuration, see docker-compose.yml
+docker compose up
 ```
 
 - **Frontend** → http://localhost:3000
 - **Backend API** → http://localhost:8443
+- **Swagger-ui** → http://localhost:8443/swagger-ui/index.html
 
 ```bash
 docker compose down   # to stop
+```
+
+### Admin rights
+You can give admin rights to account manually via Docker:
+```bash
+docker exec -it postgres-stsh psql --dbname steamsh -U postgres
+SELECT * FROM users;
+UPDATE users SET role = 'ADMIN' WHERE id = 1; # re-login after this
 ```
 
 ### Run Locally
