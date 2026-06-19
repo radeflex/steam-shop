@@ -44,12 +44,14 @@ public class BalanceServiceTest {
                 .status(PaymentStatus.PENDING)
                 .confirmationUrl("confirmation.url").build();
 
+        UUID idemp = UUID.randomUUID();
+
         when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
-        when(paymentService.createPaymentTopUp(topUpDto.amount(), u)).thenReturn(payment);
+        when(paymentService.createPaymentTopUp(idemp, topUpDto.amount(), u)).thenReturn(payment);
 
-        balanceService.topUp(topUpDto);
-        verify(paymentService, times(1)).createPaymentTopUp(topUpDto.amount(), u);
+        balanceService.topUp(idemp, topUpDto);
+        verify(paymentService, times(1)).createPaymentTopUp(any(), topUpDto.amount(), u);
         verify(notificationService, times(1)).sendPayment(payment);
         assertEquals(u.getBalance(), oldBalance);
     }

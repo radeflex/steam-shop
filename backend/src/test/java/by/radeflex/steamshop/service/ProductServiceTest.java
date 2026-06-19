@@ -52,7 +52,7 @@ public class ProductServiceTest {
         productService.create(dto, PREVIEW);
         verify(productRepository).save(any(Product.class));
         verify(imageService).upload(any(MultipartFile.class));
-        verify(productMapper).mapFrom(any(Product.class));
+        verify(productMapper).map(any(Product.class));
     }
 
     @ParameterizedTest

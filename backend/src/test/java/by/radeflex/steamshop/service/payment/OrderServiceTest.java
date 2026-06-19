@@ -55,10 +55,10 @@ public class OrderServiceTest {
 
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
-        when(paymentService.createPaymentViaBalance(u, p)).thenReturn(pm);
+        when(paymentService.createPaymentViaBalance(any(), u, p)).thenReturn(pm);
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(p));
 
-        var result = orderService.purchaseViaBalance(PRODUCT_ID);
+        var result = orderService.purchaseViaBalance(any(), PRODUCT_ID);
         verify(accountService, times(1)).sellAccounts(eq(pm));
         verify(mailService, times(1)).sendAccounts(eq(pm), any());
         verify(notificationService, times(1)).sendPayment(eq(pm));
@@ -76,7 +76,7 @@ public class OrderServiceTest {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(p));
 
-        var result = orderService.purchaseViaBalance(PRODUCT_ID);
+        var result = orderService.purchaseViaBalance(any(), PRODUCT_ID);
         verify(productRepository).findById(PRODUCT_ID);
         verifyNoMoreInteractions(paymentService, accountService,
                 notificationService, mailService);
@@ -92,7 +92,7 @@ public class OrderServiceTest {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.empty());
 
-        var result = orderService.purchaseViaBalance(PRODUCT_ID);
+        var result = orderService.purchaseViaBalance(any(), PRODUCT_ID);
         verify(productRepository).findById(PRODUCT_ID);
         verifyNoMoreInteractions(paymentService, accountService,
                 notificationService, mailService);
@@ -121,14 +121,14 @@ public class OrderServiceTest {
         when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(userProductRepository.findAvailableByUser(u)).thenReturn(cart);
-        when(paymentService.createPaymentCartViaBalance(u, sum, cart))
+        when(paymentService.createPaymentCartViaBalance(any(), u, sum, cart))
                 .thenReturn(pm);
         
-        var result = orderService.purchaseCartViaBalance();
+        var result = orderService.purchaseCartViaBalance(any());
         assertTrue(result);
         assertEquals(0, u.getBalance());
         verify(userProductRepository).findAvailableByUser(u);
-        verify(paymentService, times(1)).createPaymentCartViaBalance(u, sum, cart);
+        verify(paymentService, times(1)).createPaymentCartViaBalance(any(), u, sum, cart);
         verify(userRepository).findById(USER_ID);
         verify(accountService, times(1)).sellAccounts(pm);
         verify(notificationService, times(1)).sendPayment(pm);
@@ -157,7 +157,7 @@ public class OrderServiceTest {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(userProductRepository.findAvailableByUser(u)).thenReturn(cart);
 
-        var result = orderService.purchaseCartViaBalance();
+        var result = orderService.purchaseCartViaBalance(any());
         assertFalse(result);
         assertEquals(oldBalance, u.getBalance());
         verify(userRepository).findById(USER_ID);
@@ -175,7 +175,7 @@ public class OrderServiceTest {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(userProductRepository.findAvailableByUser(u)).thenReturn(Collections.emptyList());
 
-        assertThrows(IllegalArgumentException.class, () -> orderService.purchaseCartViaBalance());
+        assertThrows(IllegalArgumentException.class, () -> orderService.purchaseCartViaBalance(any()));
         assertEquals(oldBalance, u.getBalance());
         verify(userRepository).findById(USER_ID);
         verify(userProductRepository).findAvailableByUser(u);
@@ -193,13 +193,13 @@ public class OrderServiceTest {
 
         when(currentUserService.getCurrentUserEntity()).thenReturn(u);
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(p));
-        when(paymentService.createPaymentViaCard(p.getPrice(), u, PaymentSource.CLICK, up))
+        when(paymentService.createPaymentViaCard(any(), p.getPrice(), u, PaymentSource.CLICK, up))
                 .thenReturn(pm);
 
-        var result = orderService.purchaseViaCard(PRODUCT_ID);
+        var result = orderService.purchaseViaCard(any(), PRODUCT_ID);
         assertTrue(result.isPresent());
         verify(productRepository).findById(PRODUCT_ID);
-        verify(paymentService).createPaymentViaCard(p.getPrice(), u, PaymentSource.CLICK, up);
+        verify(paymentService).createPaymentViaCard(any(), p.getPrice(), u, PaymentSource.CLICK, up);
         verify(notificationService).sendPayment(pm);
     }
 
@@ -210,7 +210,7 @@ public class OrderServiceTest {
         when(currentUserService.getCurrentUserEntity()).thenReturn(u);
         when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.empty());
 
-        var result = orderService.purchaseViaCard(PRODUCT_ID);
+        var result = orderService.purchaseViaCard(any(), PRODUCT_ID);
         assertTrue(result.isEmpty());
         verify(productRepository).findById(PRODUCT_ID);
         verifyNoMoreInteractions(paymentService, notificationService);
@@ -238,13 +238,13 @@ public class OrderServiceTest {
         when(currentUserService.getCurrentUserId()).thenReturn(USER_ID);
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(userProductRepository.findAvailableByUser(u)).thenReturn(cart);
-        when(paymentService.createPaymentViaCard(sum, u, PaymentSource.CART, cart))
+        when(paymentService.createPaymentViaCard(any(), sum, u, PaymentSource.CART, cart))
                 .thenReturn(pm);
 
-        var result = orderService.purchaseCartViaCard();
+        var result = orderService.purchaseCartViaCard(any());
         assertNotNull(result);
         verify(userProductRepository).findAvailableByUser(u);
-        verify(paymentService, times(1)).createPaymentViaCard(sum, u, PaymentSource.CART, cart);
+        verify(paymentService, times(1)).createPaymentViaCard(any(), sum, u, PaymentSource.CART, cart);
         verify(notificationService, times(1)).sendPayment(pm);
     }
 
@@ -256,7 +256,7 @@ public class OrderServiceTest {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(u));
         when(userProductRepository.findAvailableByUser(u)).thenReturn(Collections.emptyList());
 
-        assertThrows(IllegalArgumentException.class, () -> orderService.purchaseCartViaCard());
+        assertThrows(IllegalArgumentException.class, () -> orderService.purchaseCartViaCard(any()));
         verify(userProductRepository).findAvailableByUser(u);
         verifyNoMoreInteractions(paymentService, notificationService);
     }

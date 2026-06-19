@@ -8,8 +8,6 @@ import by.radeflex.steamshop.exception.ObjectExistsException;
 import by.radeflex.steamshop.mapper.CartMapper;
 import by.radeflex.steamshop.repository.ProductRepository;
 import by.radeflex.steamshop.repository.UserProductRepository;
-import by.radeflex.steamshop.service.CartService;
-import by.radeflex.steamshop.service.CurrentUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

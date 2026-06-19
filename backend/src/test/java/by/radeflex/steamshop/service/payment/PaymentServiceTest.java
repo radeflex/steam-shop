@@ -83,7 +83,7 @@ public class PaymentServiceTest {
         when(paymentItemRepository.save(any(PaymentItem.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
         
-        var result = paymentService.createPaymentCartViaBalance(u, sum, cart);
+        var result = paymentService.createPaymentCartViaBalance(any(), u, sum, cart);
         int finalSum = sum;
         // saves payment properly
         verify(paymentRepository).save(argThat(p ->
@@ -112,7 +112,7 @@ public class PaymentServiceTest {
         when(paymentItemRepository.save(any(PaymentItem.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        var result = paymentService.createPaymentViaBalance(u, p);
+        var result = paymentService.createPaymentViaBalance(any(), u, p);
         // saves payment item exactly 1 time
         verify(paymentItemRepository, times(1)).save(argThat(pi ->
                 pi.getPayment().equals(result)
@@ -162,7 +162,7 @@ public class PaymentServiceTest {
         when(paymentItemRepository.save(any(PaymentItem.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        var result = paymentService.createPaymentViaCard(sum, u, PaymentSource.CART, cart);
+        var result = paymentService.createPaymentViaCard(any(), sum, u, PaymentSource.CART, cart);
         int finalSum = sum;
         verify(yookassa, times(1)).createPayment(any(PaymentRequest.class));
         verify(paymentRepository).save(argThat(p ->
@@ -193,7 +193,7 @@ public class PaymentServiceTest {
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        paymentService.createPaymentTopUp(dto.amount(), u);
+        paymentService.createPaymentTopUp(any(), dto.amount(), u);
         verify(yookassa, times(1)).createPayment(any(PaymentRequest.class));
         verify(paymentRepository).save(argThat(p ->
                 p.getStatus().equals(PaymentStatus.PENDING)

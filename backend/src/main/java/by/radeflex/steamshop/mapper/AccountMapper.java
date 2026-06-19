@@ -19,6 +19,9 @@ public interface AccountMapper {
     @Mapping(target = "username", source = "dto.username")
     @Mapping(target = "password", source = "dto.password")
     @Mapping(target = "email", source = "dto.email")
+    @Mapping(target = "createdBy", source = "createdBy")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     Account mapFrom(AccountCreateDto dto, User createdBy);
 
     default Product map(Integer productId) {

@@ -8,8 +8,6 @@ import by.radeflex.steamshop.mapper.NotificationMapper;
 import by.radeflex.steamshop.repository.NotificationReadRepository;
 import by.radeflex.steamshop.repository.NotificationRepository;
 import by.radeflex.steamshop.repository.UserRepository;
-import by.radeflex.steamshop.service.CurrentUserService;
-import by.radeflex.steamshop.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

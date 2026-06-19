@@ -117,9 +117,7 @@ public class AccountService {
                 .map(a -> accountMapper.mapFrom(a, user)).toList();
         for (int i = 0; i < accounts.size(); ++i) {
             try {
-                var a = accounts.get(i);
-                a.setId(null);
-                accountRepository.saveAndFlush(a);
+                accountRepository.saveAndFlush(accounts.get(i));
                 inserted++;
             } catch (Exception e) {
                 errorRows.add(i + 1);

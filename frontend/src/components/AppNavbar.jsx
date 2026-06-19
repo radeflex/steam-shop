@@ -53,9 +53,6 @@ export default function AppNavbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const navLinkClass = ({ isActive }) =>
-    `nav-link px-2 ${isActive ? "active-link" : "text-light"}`;
-
   if (loading) return null;
 
   const goToAdmin = () => navigate("/admin/products");
@@ -87,7 +84,7 @@ export default function AppNavbar() {
       <Link className="navbar-brand" to="/products">Steam Shop</Link>
 
       <div className="d-flex align-items-center gap-3">
-        <NavLink to="/products" className={navLinkClass}>Products</NavLink>
+        <NavLink to="/products" className="nav-link px-2 text-light">Products</NavLink>
       </div>
 
       <div className="d-flex align-items-center gap-2">
@@ -126,7 +123,7 @@ export default function AppNavbar() {
                   style={{ width: 320, maxHeight: 300, overflowY: "auto", zIndex: 200 }}
                 >
                   {displayNotifications.length === 0 && (
-                    <div className="p-3 text-center text-muted">No notifications</div>
+                    <div className="p-3 text-center text-light ">No notifications</div>
                   )}
 
                   {displayNotifications.map(n => {
@@ -140,7 +137,7 @@ export default function AppNavbar() {
                         <div className={`fw-bold text-${n.type.toLowerCase()}`}>
                           {n.title}
                         </div>
-                        {n.text && <div className="small text-muted mt-1">{n.text}</div>}
+                        {n.text && <div className="small text-light mt-1">{n.text}</div>}
                       </div>
 
                       {/* Показываем кнопку только для непрочитанных */}
@@ -171,7 +168,7 @@ export default function AppNavbar() {
             </div>
 
             {/* Cart */}
-            <NavLink to="/cart" className={navLinkClass}>
+            <NavLink to="/cart" className="nav-link px-2 text-light">
               <FontAwesomeIcon icon={faCartShopping} fontSize={25} />
               {cartCount > 0 && (
                 <span className="position-absolute top-20 start-200 translate-middle badge rounded-pill bg-danger" style={{ fontSize: "0.6rem" }}>
@@ -181,7 +178,7 @@ export default function AppNavbar() {
             </NavLink>
 
             {/* User info */}
-            <NavLink to="/profile" className={navLinkClass}>
+            <NavLink to="/profile" className="nav-link px-2 text-light">
               <div className="d-flex flex-column align-items-start me-2">
                 <span>{user.username}</span>
                 <small className="text-warning">{user.balance} ₽ | {user.points} pts</small>

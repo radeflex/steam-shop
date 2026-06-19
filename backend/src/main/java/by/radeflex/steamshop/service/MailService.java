@@ -1,14 +1,13 @@
 package by.radeflex.steamshop.service;
 
 import by.radeflex.steamshop.entity.Account;
-import by.radeflex.steamshop.entity.Payment;
-import by.radeflex.steamshop.props.MailProperties;
 import by.radeflex.steamshop.entity.EmailConfirmation;
+import by.radeflex.steamshop.entity.Payment;
 import by.radeflex.steamshop.entity.User;
+import by.radeflex.steamshop.props.MailProperties;
 import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.EmailConfirmationRepository;
 import freemarker.template.Configuration;
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +77,8 @@ public class MailService {
         javaMailSender.send(message);
     }
 
-    public void sendAccounts(Payment p, Map<String, List<Account>> accounts) throws MessagingException {
+    @SneakyThrows
+    public void sendAccounts(Payment p, Map<String, List<Account>> accounts) {
         var html = getAccountsHtml(p.getUser(), accounts);
         var message = javaMailSender.createMimeMessage();
         var helper = new MimeMessageHelper(message, "UTF-8");

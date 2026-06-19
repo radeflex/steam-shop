@@ -216,34 +216,37 @@ export default function AdminAccountsPage() {
 
 
   return (
-    <div className="container py-4">
+    <div className="container mt-4">
       <ToastContainer position="top-right" autoClose={5000} />
       {error && <div className="alert alert-danger">{error}</div>}
-
-      <div className="d-flex justify-content-end gap-2 mb-3">
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".csv"
-          style={{ display: "none" }}
-          onChange={handleCsvChange}
-        />
-        <button
-          className="btn btn-info"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={csvLoading}
-        >
-          {csvLoading ? "Import..." : "Import"}
-        </button>
-        <button
-          className="btn btn-primary"
-          disabled={creatingRow || loading}
-          onClick={openCreateRow}
-          title="Добавить аккаунт"
-        >
-          +raw
-        </button>
+      <div className="d-flex justify-content-between mb-3">
+        <h3>Accounts</h3>
+        <div className="d-flex justify-content-end gap-2">
+          <input
+              type="file"
+              ref={fileInputRef}
+              accept=".csv"
+              style={{ display: "none" }}
+              onChange={handleCsvChange}
+          />
+          <button
+              className="btn btn-info"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={csvLoading}
+          >
+            {csvLoading ? "Import..." : "Import"}
+          </button>
+          <button
+              className="btn btn-primary"
+              disabled={creatingRow || loading}
+              onClick={openCreateRow}
+              title="Добавить аккаунт"
+          >
+            +raw
+          </button>
+        </div>
       </div>
+
 
 
       <div className="card">
