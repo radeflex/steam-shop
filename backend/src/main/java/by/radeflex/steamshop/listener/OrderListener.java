@@ -20,7 +20,6 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-@Transactional
 public class OrderListener {
     private final NotificationService notificationService;
     private final AccountService accountService;
@@ -30,11 +29,13 @@ public class OrderListener {
     private final PaymentService paymentService;
 
     @EventListener
+    @Transactional
     public void handleCreateOrder(CreateOrderEvent e) {
         notificationService.sendPayment(e.getPayment());
     }
 
     @EventListener
+    @Transactional
     public void handleProcessOrder(ProcessOrderEvent e) throws UnspecifiedShopInformation, BadRequestException, IOException {
         var p = e.getPayment();
         try {

@@ -8,10 +8,13 @@ import by.radeflex.steamshop.entity.User;
 import by.radeflex.steamshop.props.ShopProperties;
 import by.radeflex.steamshop.repository.EmailConfirmationRepository;
 import freemarker.template.Configuration;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -61,6 +65,7 @@ public class MailService {
         return writer.getBuffer().toString();
     }
 
+    @Async
     @SneakyThrows
     public void sendRegistration(User user) {
         var html = getRegisterHtml(user);
@@ -73,15 +78,20 @@ public class MailService {
         javaMailSender.send(message);
     }
 
-    @SneakyThrows
-    public void sendAccounts(Payment p, Map<String, List<Account>> accounts) {
+    public void sendAccounts(Payment p, Map<String, List<Account>> accounts) throws MessagingException {
         var html = getAccountsHtml(p.getUser(), accounts);
         var message = javaMailSender.createMimeMessage();
         var helper = new MimeMessageHelper(message, "UTF-8");
-        helper.setTo(p.getUser().getEmail());
-        helper.setSubject("steamshop812: Заказ №"+p.getOrderId());
-        helper.setText(html, true);
-        helper.setFrom(mailProperties.getUsername());
-        javaMailSender.send(message);
+        try {
+            helper.setTo(p.getUser().getEmail());
+            helper.setSubject("steamshop812: Заказ №"+p.getOrderId());
+            helper.setText(html, true);
+            helper.setFrom(mailProperties.getUsername());
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            log.error("Accounts didn't sent. Email: {}, PaymentId: {}",
+                    p.getUser().getEmail(), p.getId(), e);
+            throw e;
+        }
     }
 }
