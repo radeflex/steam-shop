@@ -2,8 +2,8 @@ spring:
   profiles:
     active: local
   mail:
-    host: smtp.gmail.com
-    port: 587
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
@@ -11,6 +11,9 @@ spring:
         transport:
           protocol: smtp
         smtp:
+          connectiontimeout: 5000
+          writetimeout: 5000
+          timeout: 3000
           auth: true
           starttls:
             enable: true
@@ -34,9 +37,9 @@ spring:
     multipart:
       max-file-size: 10MB
 s3:
-  bucket: cars
-  endpoint: https://s3.storage.selcloud.ru
-  region: ru-1
+  bucket: ${S3_BUCKET}
+  endpoint: ${S3_ENDPOINT}
+  region: ${S3_REGION}
   access-key: ${S3_ACCESS}
   secret-key: ${S3_SECRET}
 server:
@@ -58,4 +61,14 @@ shop:
     - 77.75.154.128/25
     - 2a02:5180::/32
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${UI_URL}
+logging:
+  file:
+    name: logs/stsh.log
+    path: logs
+  level:
+    by.radeflex: DEBUG
+    org.springframework.web: ERROR
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
