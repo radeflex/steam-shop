@@ -31,16 +31,16 @@ public class ProductService {
     @Cacheable("products")
     public PageResponse<ProductReadDto> findAll(ProductFilter filter, Pageable pageable) {
         return PageResponse.of(productRepository.findAllAvailable(filter, pageable)
-                .map(productMapper::mapFrom));
+                .map(productMapper::map));
     }
 
     public PageResponse<ProductAdminReadDto> findAllAdmin(ProductFilter filter, Pageable pageable) {
         return PageResponse.of(productRepository.findAllWithAccountsLeft(filter, pageable)
-                .map(productMapper::mapFrom));
+                .map(productMapper::map));
     }
 
     public Optional<ProductReadDto> findById(Integer id) {
-        return productRepository.findById(id).map(productMapper::mapFrom);
+        return productRepository.findById(id).map(productMapper::map);
     }
 
     private Product uploadImage(MultipartFile file, Product p) {
@@ -58,10 +58,10 @@ public class ProductService {
     public ProductReadDto create(ProductCreateDto dto, MultipartFile file) {
         checkUnique(dto);
         return Optional.of(dto)
-                .map(productMapper::mapFrom)
+                .map(productMapper::map)
                 .map(p -> uploadImage(file, p))
                 .map(productRepository::save)
-                .map(productMapper::mapFrom)
+                .map(productMapper::map)
                 .orElseThrow();
     }
 
@@ -72,9 +72,9 @@ public class ProductService {
         checkUnique(dto);
         return productRepository.findById(id)
                 .map(p -> uploadImage(file, p))
-                .map(p -> productMapper.mapFrom(p, dto))
+                .map(p -> productMapper.map(p, dto))
                 .map(productRepository::saveAndFlush)
-                .map(productMapper::mapFrom);
+                .map(productMapper::map);
     }
 
     @Transactional

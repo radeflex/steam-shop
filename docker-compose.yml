@@ -28,22 +28,27 @@ services:
     container_name: stsh-api
     image: ghcr.io/radeflex/stsh-api:latest
     environment:
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-
-      UI_URL: ${UI_URL}
       
       DB_URL: jdbc:postgresql://postgres-stsh:5432/${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME:?err}
+      DB_PASSWORD: ${DB_PASSWORD:?err}
 
-      S3_ACCESS: ${S3_ACCESS}
-      S3_SECRET: ${S3_SECRET}
+      S3_BUCKET: ${S3_BUCKET?:err}
+      S3_ENDPOINT: ${S3_ENDPOINT?:err}
+      S3_REGION: ${S3_REGION:?err}
+      S3_ACCESS: ${S3_ACCESS:?err}
+      S3_SECRET: ${S3_SECRET:?err}
 
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?err}
 
-      SHOP_ID: ${SHOP_ID}
-      SHOP_TOKEN: ${SHOP_TOKEN}
+      SHOP_ID: ${SHOP_ID:?err}
+      SHOP_TOKEN: ${SHOP_TOKEN:?err}
+
+      UI_URL: ${UI_URL:-http://localhost:3000}
     ports:
       - "8443:8443"
     networks:

@@ -15,10 +15,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,7 +37,7 @@ public class AccountServiceTest {
     private PaymentItemRepository paymentItemRepository;
     @Mock
     private ProductRepository productRepository;
-    @Spy
+    @Mock
     private AccountMapper accountMapper;
     @Mock
     private CurrentUserService currentUserService;
@@ -51,21 +53,47 @@ public class AccountServiceTest {
 
     @Test
     void create_shouldReturnDto_ifProductExists() {
-        var dto = new AccountCreateDto("example", "passwd", "example@gmail.com", "passwd", PRODUCT_ID);
+        var dto = new AccountCreateDto(
+                "example",
+                "passwd",
+                "example@gmail.com",
+                "passwd",
+                PRODUCT_ID
+        );
 
-        when(productRepository.findById(PRODUCT_ID)).thenReturn(Optional.of(Product.builder().id(PRODUCT_ID).build()));
-        when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        var user = User.builder().id(USER_ID).build();
+
+        var account = Account.builder()
+                .username(dto.username())
+                .password(dto.password())
+                .email(dto.email())
+                .emailPassword(dto.emailPassword())
+                .product(Product.builder().id(PRODUCT_ID).build())
+                .createdBy(user)
+                .build();
+
+        var readDto = mock(by.radeflex.steamshop.dto.AccountReadDto.class);
+
+        when(productRepository.findById(PRODUCT_ID))
+                .thenReturn(Optional.of(Product.builder().id(PRODUCT_ID).build()));
+
+        when(accountMapper.mapFrom(dto, user))
+                .thenReturn(account);
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        when(accountMapper.mapFrom(account))
+                .thenReturn(readDto);
 
         var result = accountService.create(dto);
+
         assertTrue(result.isPresent());
+
         verify(productRepository).findById(PRODUCT_ID);
-        verify(accountRepository).save(argThat(a ->
-                a.getProduct().getId().equals(PRODUCT_ID)
-                && a.getUsername().equals(dto.username())
-                && a.getPassword().equals(dto.password())
-                && a.getEmail().equals(dto.email())
-                && a.getEmailPassword().equals(dto.emailPassword())
-                && a.getCreatedBy().equals(currentUserService.getCurrentUserEntity())));
+        verify(accountMapper).mapFrom(dto, user);
+        verify(accountRepository).save(account);
+        verify(accountMapper).mapFrom(account);
     }
 
     @Test
@@ -87,140 +115,178 @@ public class AccountServiceTest {
     @ParameterizedTest
     @EnumSource(ReservationMode.class)
     void reserveAndUnreserve_shouldWork(ReservationMode mode) {
-        Payment pm = Payment.builder().id(UUID.randomUUID()).build();
-        List<PaymentItem> items = new ArrayList<>();
-        List<Account> accounts = new ArrayList<>();
-        var statusFrom = mode.equals(ReservationMode.RESERVE) ? AccountStatus.AVAILABLE : AccountStatus.RESERVED;
-        var statusTo = mode.equals(ReservationMode.UNRESERVE) ? AccountStatus.AVAILABLE : AccountStatus.RESERVED;
-        int sum = 0;
-        for (int i = 1; i < 5; i++) {
-            var p = Product.builder()
-                    .id(i + 2)
-                    .title("example " + (i + 2))
-                    .price(i * 50)
-                    .build();
-            items.add(PaymentItem.builder()
-                    .product(p)
-                    .payment(pm)
-                    .quantity(1).build());
-            accounts.add(Account.builder().product(p).status(statusFrom).build());
-            sum += p.getPrice();
-        }
-        pm.setAmount(sum);
-        when(accountRepository.findByProductIdAndStatus(any(), eq(statusFrom), any()))
-                .thenAnswer(inv -> List.of(Account.builder()
-                        .product(items.get((int)inv.getArgument(0) - 3).getProduct())
-                        .status(inv.getArgument(1)).build()));
-        when(paymentItemRepository.findAllByPayment(pm)).thenReturn(items);
+        Payment pm = Payment.builder()
+                .id(UUID.randomUUID())
+                .build();
 
-        if (mode.equals(ReservationMode.RESERVE))
+        var statusFrom =
+                mode == ReservationMode.RESERVE
+                        ? AccountStatus.AVAILABLE
+                        : AccountStatus.RESERVED;
+
+        var statusTo =
+                mode == ReservationMode.RESERVE
+                        ? AccountStatus.RESERVED
+                        : AccountStatus.AVAILABLE;
+
+        List<PaymentItem> items = List.of(
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build()
+        );
+
+        List<Account> accounts = new ArrayList<>();
+
+        for (int i = 0; i < 4; i++) {
+            accounts.add(Account.builder()
+                    .status(statusFrom)
+                    .product(Product.builder().id(i + 1).build())
+                    .build());
+        }
+
+        when(paymentItemRepository.findAllByPayment(pm))
+                .thenReturn(items);
+
+        when(accountRepository.findByStatus(
+                pm.getId(),
+                statusFrom.name()))
+                .thenReturn(accounts);
+
+        if (mode == ReservationMode.RESERVE) {
             accountService.reserve(pm);
-        else accountService.unreserve(pm);
-        verify(accountRepository, times(items.size()))
-                .findByProductIdAndStatus(anyInt(), any(AccountStatus.class), any());
-        verify(accountRepository, times(accounts.size())).save(argThat(a ->
-                a.getProduct() != null
-                && a.getStatus().equals(statusTo)));
+        } else {
+            accountService.unreserve(pm);
+        }
+
+        verify(accountRepository)
+                .findByStatus(pm.getId(), statusFrom.name());
+
+        verify(accountRepository)
+                .saveAll(argThat(accs -> {
+                    List<Account> list = new ArrayList<>();
+                    accs.forEach(list::add);
+
+                    return list.size() == 4
+                            && list.stream()
+                            .allMatch(a -> a.getStatus() == statusTo);
+                }));
     }
 
     @Test
     void reserve_shouldThrow_whenAccountsLack() {
-        Payment pm = Payment.builder().id(UUID.randomUUID()).build();
-        List<PaymentItem> items = new ArrayList<>();
-        int sum = 0;
-        for (int i = 1; i < 5; i++) {
-            var p = Product.builder()
-                    .id(i + 2)
-                    .title("example " + (i + 2))
-                    .price(i * 50)
-                    .build();
-            items.add(PaymentItem.builder()
-                    .product(p)
-                    .payment(pm)
-                    .quantity(1).build());
-            sum += p.getPrice();
-        }
-        pm.setAmount(sum);
-        when(accountRepository.findByProductIdAndStatus(any(), eq(AccountStatus.AVAILABLE), any()))
-                .thenAnswer(inv -> {
-                    int ind = (int)inv.getArgument(0) - 3;
-                    if (ind == 2) return Collections.emptyList();
-                    return List.of(Account.builder()
-                        .product(items.get(ind).getProduct())
-                        .status(inv.getArgument(1)).build());
-                });
-        when(paymentItemRepository.findAllByPayment(pm)).thenReturn(items);
+        Payment pm = Payment.builder()
+                .id(UUID.randomUUID())
+                .build();
 
-        assertThrows(AccountLackException.class, () -> accountService.reserve(pm));
-        verify(accountRepository, times(items.size()))
-                .findByProductIdAndStatus(anyInt(), any(AccountStatus.class), any());
-        verify(accountRepository, never()).save(any());
+        List<PaymentItem> items = List.of(
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build()
+        );
+
+        List<Account> accounts = List.of(
+                Account.builder().status(AccountStatus.AVAILABLE).build(),
+                Account.builder().status(AccountStatus.AVAILABLE).build(),
+                Account.builder().status(AccountStatus.AVAILABLE).build()
+        );
+
+        when(paymentItemRepository.findAllByPayment(pm))
+                .thenReturn(items);
+
+        when(accountRepository.findByStatus(
+                pm.getId(),
+                AccountStatus.AVAILABLE.name()))
+                .thenReturn(accounts);
+
+        assertThrows(
+                AccountLackException.class,
+                () -> accountService.reserve(pm)
+        );
+
+        verify(accountRepository, never()).saveAll(any());
     }
 
     @Test
     void sellAccounts_shouldWork() {
-        Payment pm = Payment.builder().id(UUID.randomUUID()).build();
-        List<PaymentItem> items = new ArrayList<>();
+        Payment pm = Payment.builder()
+                .id(UUID.randomUUID())
+                .build();
+
+        Product product = Product.builder()
+                .title("Steam")
+                .build();
+
+        List<PaymentItem> items = List.of(
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build()
+        );
+
         List<Account> accounts = new ArrayList<>();
-        int sum = 0;
-        for (int i = 1; i < 5; i++) {
-            var p = Product.builder()
-                    .id(i + 2)
-                    .title("example " + (i + 2))
-                    .price(i * 50)
-                    .build();
-            items.add(PaymentItem.builder()
-                    .product(p)
-                    .payment(pm)
-                    .quantity(1).build());
-            accounts.add(Account.builder().product(p).status(AccountStatus.RESERVED).build());
-            sum += p.getPrice();
+
+        for (int i = 0; i < 4; i++) {
+            accounts.add(Account.builder()
+                    .status(AccountStatus.RESERVED)
+                    .product(product)
+                    .build());
         }
-        pm.setAmount(sum);
-        when(accountRepository.findByProductIdAndStatus(any(), eq(AccountStatus.RESERVED), any()))
-                .thenAnswer(inv -> List.of(Account.builder()
-                            .product(items.get((int)inv.getArgument(0) - 3).getProduct())
-                            .status(inv.getArgument(1)).build()));
-        when(paymentItemRepository.findAllByPayment(pm)).thenReturn(items);
+
+        when(paymentItemRepository.findAllByPayment(pm))
+                .thenReturn(items);
+
+        when(accountRepository.findByStatus(
+                pm.getId(),
+                AccountStatus.RESERVED.name()))
+                .thenReturn(accounts);
+
         accountService.sellAccounts(pm);
-        verify(accountRepository, times(items.size()))
-                .findByProductIdAndStatus(anyInt(), any(AccountStatus.class), any());
-        verify(accountRepository, times(accounts.size())).save(argThat(a ->
-                a.getProduct() != null
-                        && a.getStatus().equals(AccountStatus.SOLD)));
+
+        verify(accountRepository)
+                .saveAll(argThat(accs -> {
+                    List<Account> list = new ArrayList<>();
+                    accs.forEach(list::add);
+
+                    return list.size() == 4
+                            && list.stream()
+                            .allMatch(a -> a.getStatus() == AccountStatus.SOLD);
+                }));
     }
 
     @Test
     void sellAccounts_shouldThrow_whenAccountsLack() {
-        Payment pm = Payment.builder().id(UUID.randomUUID()).build();
-        List<PaymentItem> items = new ArrayList<>();
-        int sum = 0;
-        for (int i = 1; i < 5; i++) {
-            var p = Product.builder()
-                    .id(i + 2)
-                    .title("example " + (i + 2))
-                    .price(i * 50)
-                    .build();
-            items.add(PaymentItem.builder()
-                    .product(p)
-                    .payment(pm)
-                    .quantity(1).build());
-            sum += p.getPrice();
-        }
-        pm.setAmount(sum);
-        when(accountRepository.findByProductIdAndStatus(any(), eq(AccountStatus.RESERVED), any()))
-                .thenAnswer(inv -> {
-                    int ind = (int)inv.getArgument(0) - 3;
-                    if (ind == 2) return Collections.emptyList();
-                    return List.of(Account.builder()
-                            .product(items.get(ind).getProduct())
-                            .status(inv.getArgument(1)).build());
-                });
-        when(paymentItemRepository.findAllByPayment(pm)).thenReturn(items);
+        Payment pm = Payment.builder()
+                .id(UUID.randomUUID())
+                .build();
 
-        assertThrows(AccountLackException.class, () -> accountService.sellAccounts(pm));
-        verify(accountRepository, times(items.size()))
-                .findByProductIdAndStatus(anyInt(), any(AccountStatus.class), any());
-        verify(accountRepository, never()).save(any());
+        List<PaymentItem> items = List.of(
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build(),
+                PaymentItem.builder().quantity(1).build()
+        );
+
+        List<Account> accounts = List.of(
+                Account.builder().status(AccountStatus.RESERVED).build(),
+                Account.builder().status(AccountStatus.RESERVED).build(),
+                Account.builder().status(AccountStatus.RESERVED).build()
+        );
+
+        when(paymentItemRepository.findAllByPayment(pm))
+                .thenReturn(items);
+
+        when(accountRepository.findByStatus(
+                pm.getId(),
+                AccountStatus.RESERVED.name()))
+                .thenReturn(accounts);
+
+        assertThrows(
+                AccountLackException.class,
+                () -> accountService.sellAccounts(pm)
+        );
+
+        verify(accountRepository, never()).saveAll(any());
     }
 }

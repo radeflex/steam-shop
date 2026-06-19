@@ -3,21 +3,18 @@ package by.radeflex.steamshop.mapper;
 import by.radeflex.steamshop.dto.ProductHistoryReadDto;
 import by.radeflex.steamshop.entity.*;
 import jakarta.persistence.Tuple;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class ProductHistoryMapper {
-    public UserProductHistory mapFrom(PaymentItem pi) {
-        return UserProductHistory.builder()
-                .product(pi.getProduct())
-                .user(pi.getPayment().getUser())
-                .title(pi.getProduct().getTitle())
-                .price(pi.getProduct().getPrice())
-                .payment(pi.getPayment())
-                .quantity(pi.getQuantity())
-                .build();
-    }
-    public ProductHistoryReadDto mapFrom(Tuple tuple) {
+@Mapper(componentModel = "spring")
+public interface ProductHistoryMapper {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", source = "payment.user")
+    @Mapping(target = "title", source = "product.title")
+    @Mapping(target = "price", source = "product.price")
+    UserProductHistory mapFrom(PaymentItem pi);
+
+    default ProductHistoryReadDto mapFrom(Tuple tuple) {
         return ProductHistoryReadDto.builder()
                 .productId(tuple.get("productId", Integer.class))
                 .userId(tuple.get("userId", Integer.class))
